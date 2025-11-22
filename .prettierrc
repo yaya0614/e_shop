@@ -1,0 +1,8 @@
+{
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "endOfLine": "auto",
+  "singleAttributePerLine": true,
+  "singleQuote": true,
+  "plugins": []
+}

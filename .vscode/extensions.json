@@ -1,3 +1,8 @@
 {
-  "recommendations": ["vue.volar", "prisma.prisma"]
+  "recommendations": [
+    "vue.volar",
+    "prisma.prisma",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ]
 }
