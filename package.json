@@ -7,12 +7,27 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:create": "prisma migrate dev --create-only",
+    "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "dotenv": "^17.2.3",
     "nuxt": "^3.12.3",
     "nuxt-typed-router": "^4.0.2",
+    "pg": "^8.16.3",
     "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
     "vue": "^3.5.24"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.6",
+    "prisma": "^7.0.0"
   }
 }
