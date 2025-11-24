@@ -27,7 +27,7 @@ model Product {
   coverId       String?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   vendorId String
   vendor   Vendor @relation(fields: [vendorId], references: [id])
