@@ -1,0 +1,56 @@
+model Vendor {
+  id      String @id @default(uuid())
+  name    String
+  phone   String
+  email   String @unique
+  address String
+
+  products  Product[]
+  employees Employee[]
+  logs      VendorLog[]
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+
+  products Product[]
+}
+
+model Product {
+  id            String  @id @default(uuid())
+  name          String
+  description   String?
+  price         Float
+  discountPrice Float?
+  quantity      Int
+  coverId       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  categories    Category[]
+  logs          ProductLog[]
+  cartProducts  CartProduct[]
+  orderProducts OrderProduct[]
+}
+
+enum EmployeeRole {
+  OWNER
+  ADMIN
+  CLERK
+}
+
+model Employee {
+  id   String       @id @default(uuid())
+  role EmployeeRole
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
