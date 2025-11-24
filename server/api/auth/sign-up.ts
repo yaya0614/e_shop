@@ -1,0 +1,145 @@
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { prisma } from '~/lib/prisma';
+import { registry } from '../../utils/openapi';
+
+extendZodWithOpenApi(z);
+
+const schema = z
+  .object({
+    name: z.string().min(1).openapi({
+      description: 'User name',
+      example: 'Test User',
+    }),
+    password: z.string().min(8).openapi({
+      description:
+        'Password (at least 8 characters, contains at least one uppercase letter)',
+      example: 'MyPassword123',
+    }),
+    email: z.string().email().openapi({
+      description: 'User email address',
+      example: 'test@example.com',
+    }),
+    address: z.string().optional().openapi({
+      description: 'User address (optional)',
+      example: '123 Main Street, Taipei',
+    }),
+  })
+  .openapi('SignUpRequest');
+
+const responseSchema = z
+  .object({
+    token: z.string().openapi({
+      description: 'JWT authentication token',
+      example:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0...',
+    }),
+  })
+  .openapi('SignUpResponse');
+
+const errorSchema = z
+  .object({
+    statusCode: z.number().openapi({ example: 400 }),
+    message: z.string().openapi({ example: 'User already exists' }),
+  })
+  .openapi('ErrorResponse');
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/auth/sign-up',
+  tags: ['Authentication'],
+  summary: 'User sign up',
+  description: 'Create a new user account and return a JWT token',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: schema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User sign up successfully',
+      content: {
+        'application/json': {
+          schema: responseSchema,
+        },
+      },
+    },
+    400: {
+      description: 'Bad request',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+  },
+});
+
+export default defineEventHandler(async (event) => {
+  const payload = await readValidatedBody(event, schema.safeParse);
+  if (!payload.success) {
+    throw createError({
+      statusCode: 400,
+      message: payload.error.message,
+    });
+  }
+
+  const password = payload.data.password.trim();
+  if (password.length < 8 || password.toLowerCase() === password) {
+    throw createError({
+      statusCode: 400,
+      message:
+        'Password must be at least 8 characters long and at least one uppercase letter',
+    });
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: payload.data.email,
+    },
+  });
+  if (existingUser) {
+    throw createError({
+      statusCode: 400,
+      message: 'User already exists',
+    });
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      name: payload.data.name,
+      email: payload.data.email,
+      password: bcrypt.hashSync(password, 10),
+      address: payload.data.address,
+    },
+  });
+
+  if (!process.env.JWT_SECRET) {
+    throw createError({
+      statusCode: 500,
+      message: 'JWT secret not set in environment variables',
+    });
+  }
+
+  const token = jwt.sign(
+    {
+      sub: user.id,
+      iss: 'e-shop.ntut.edu.tw',
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '7d',
+    },
+  );
+
+  return {
+    token,
+  };
+});
