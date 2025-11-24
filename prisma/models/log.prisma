@@ -1,0 +1,39 @@
+model Log {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  vendorLogs  VendorLog[]
+  adminLogs   AdminLog[]
+  productLogs ProductLog[]
+}
+
+model VendorLog {
+  id String @id @default(uuid())
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  logId String
+  log   Log    @relation(fields: [logId], references: [id])
+}
+
+model AdminLog {
+  id String @id @default(uuid())
+
+  logId String
+  log   Log    @relation(fields: [logId], references: [id])
+}
+
+model ProductLog {
+  id String @id @default(uuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  logId String
+  log   Log    @relation(fields: [logId], references: [id])
+}
