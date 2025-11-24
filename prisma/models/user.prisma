@@ -10,4 +10,46 @@ model User {
   email    String   @unique
   address  String?
   role     UserRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart      CartProduct[]
+  coupons   Coupon[]
+  orders    Order[]
+  employees Employee[]
+  logs      Log[]
+}
+
+model CartProduct {
+  id       String @id @default(uuid())
+  quantity Int
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+enum CouponType {
+  DISCOUNT
+  COUPON
+}
+
+model Coupon {
+  id               String     @id @default(uuid())
+  type             CouponType
+  discountPrice    Float?
+  couponPercentage Float?
+  maxPrice         Float?
+  minPrice         Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  orders Order[]
 }
