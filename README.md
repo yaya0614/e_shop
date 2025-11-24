@@ -36,6 +36,8 @@ Start the development server on `http://localhost:3000`:
 npm run dev
 ```
 
+OpenAPI documentation is available at `http://localhost:3000/api-docs`.
+
 ## Production
 
 Build the application for production:
