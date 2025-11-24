@@ -16,6 +16,7 @@
     "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.1.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@tailwindcss/vite": "^4.1.17",
