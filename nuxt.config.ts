@@ -14,4 +14,11 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  nitro: {
+    esbuild: {
+      options: {
+        target: 'esnext',
+      },
+    },
+  },
 });
