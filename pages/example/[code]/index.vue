@@ -18,3 +18,5 @@ const code = route.params.code;
 </template>
 
 <style scoped></style>
+
+MainPage 
