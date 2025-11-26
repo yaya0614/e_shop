@@ -9,15 +9,6 @@ If you have any questions, please ask in group.
 
 ## Setup
 
-Make sure to install dependencies:
-
-```bash
-# npm
-npm install
-npm run prisma:generate # generate prisma type
-
-```
-
 Create a new file `.env.local` and copy `.env.example` to it.
 
 ```bash
@@ -26,6 +17,15 @@ cp .env.example .env
 ```
 
 Fill all the environment variables in `.env` file.
+
+Make sure to install dependencies:
+
+```bash
+# npm
+npm install
+npm run prisma:generate # generate prisma type
+
+```
 
 ## Development Server
 

@@ -2,7 +2,7 @@
 const router = useRouter();
 
 const navigationTo = (code: string) => {
-  router.push({ name: "example-code", params: { code } });
+  router.push({ name: 'example-code', params: { code } });
 };
 </script>
 
