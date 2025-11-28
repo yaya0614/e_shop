@@ -8,6 +8,8 @@ model Vendor {
   products  Product[]
   employees Employee[]
   logs      VendorLog[]
+
+  orders Order[]
 }
 
 model Category {
@@ -21,8 +23,8 @@ model Product {
   id            String  @id @default(uuid())
   name          String
   description   String?
-  price         Float
-  discountPrice Float?
+  price         Int
+  discountPrice Int?
   quantity      Int
   coverId       String?
 

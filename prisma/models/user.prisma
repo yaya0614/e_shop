@@ -40,10 +40,10 @@ enum CouponType {
 model Coupon {
   id               String     @id @default(uuid())
   type             CouponType
-  discountPrice    Float?
+  discountPrice    Int?
   couponPercentage Float?
-  maxPrice         Float?
-  minPrice         Float?
+  maxPrice         Int?
+  minPrice         Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
