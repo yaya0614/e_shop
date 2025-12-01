@@ -6,7 +6,6 @@ extendZodWithOpenApi(z);
 
 const OrderProductSchema = z.object({
   productId: z.string(),
-
   quantity: z.number(),
 });
 
@@ -28,17 +27,25 @@ const schema = z
     }),
 
     couponId: z.string().optional().openapi({
-      // optional表示該值不一定要帶 => ?
       description: 'Coupon object applied to the order',
       example: 'f98afd90-8410-4c18-9c5d-b993a9da65e1',
     }),
   })
   .openapi('CreateOrderRequest');
 
+const responseSchema = z
+  .object({
+    status: z.literal('success').openapi({
+      description: 'Indicates the operation was successful',
+      example: 'success',
+    }),
+  })
+  .openapi('CreateOrderResponse');
+
 const errorSchema = z
   .object({
     statusCode: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: 'User already exists' }),
+    message: z.string().openapi({ example: 'Invalid userId' }),
   })
   .openapi('ErrorResponse');
 
@@ -58,7 +65,12 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'User sign up successfully',
+      description: 'Create Order Successfully',
+      content: {
+        'application/json': {
+          schema: responseSchema,
+        },
+      },
     },
     400: {
       description: 'Bad request',
