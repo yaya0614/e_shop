@@ -11,6 +11,62 @@ const schema = z.object({
   }),
 });
 
+const responseSchema = z
+  .object({
+    id: z.string().openapi({
+      description: 'Order ID',
+      example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+    }),
+
+    products: z
+      .array(
+        z.object({
+          quantity: z.int().openapi({
+            description: 'Quantity of the product in the order',
+            example: 2,
+          }),
+
+          product: z.object({
+            id: z.string().openapi({
+              description: 'Product ID',
+              example: 'b332ab67-2b11-4a88-87ef-c53a88d9dd11',
+            }),
+
+            name: z.string().openapi({
+              description: 'Product name',
+              example: 'Premium Coffee Beans',
+            }),
+
+            description: z.string().openapi({
+              description: 'Product description',
+              example: 'Single-origin Arabica coffee beans with rich aroma',
+            }),
+
+            price: z.int().openapi({
+              description: 'Unit price of the product',
+              example: 500,
+            }),
+
+            coverId: z.string().openapi({
+              description: 'Cover image ID of the product',
+              example: 'coffee-cover-001',
+            }),
+          }),
+        }),
+      )
+      .openapi({
+        description: 'List of products included in the order',
+      }),
+  })
+  .openapi('OrderDetailResponse');
+
+const errorSchema = z
+  .object({
+    statusCode: z.number().openapi({ example: 400 }),
+    message: z.string().openapi({ example: 'Invalid OrderId' }),
+  })
+  .openapi('ErrorResponse');
+
 registry.registerPath({
   method: 'get',
   tags: ['Order'],
@@ -22,6 +78,19 @@ registry.registerPath({
   responses: {
     200: {
       description: 'Get order detail successfully',
+      content: {
+        'application/json': {
+          schema: responseSchema,
+        },
+      },
+    },
+    400: {
+      description: 'Bad request',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
     },
   },
 });
