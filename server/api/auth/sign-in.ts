@@ -94,7 +94,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (!process.env.JWT_SECRET) {
+  const config = useRuntimeConfig(event);
+
+  if (!config.jwtSecret) {
     throw createError({
       statusCode: 500,
       message: 'JWT secret not set in environment variables',
@@ -107,7 +109,7 @@ export default defineEventHandler(async (event) => {
       iss: 'e-shop.ntut.edu.tw',
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    config.jwtSecret,
     {
       expiresIn: '7d',
     },
