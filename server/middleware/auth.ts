@@ -14,12 +14,16 @@ export default defineEventHandler((event) => {
     },
   };
 
-  const authorization = event.headers.get('Authorization');
-  if (!authorization) {
-    return;
+  let token: string | null = null;
+
+  const authHeader = getHeader(event, 'Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
   }
 
-  const token = authorization.replace('Bearer ', '');
+  if (!token) {
+    token = getCookie(event, 'auth.token') || null;
+  }
 
   if (!token) {
     event.context.auth.error = {

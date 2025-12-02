@@ -78,7 +78,7 @@ registry.registerPath({
   method: 'get',
   path: '/api/order',
   tags: ['Order'],
-  summary: 'Get order history',
+  summary: 'Get order history 🔒',
   security: [{ bearerAuth: [] }],
   responses: {
     200: {

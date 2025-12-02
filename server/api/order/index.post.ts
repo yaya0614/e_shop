@@ -50,7 +50,7 @@ registry.registerPath({
   method: 'post',
   path: '/api/order',
   tags: ['Order'],
-  summary: 'Create Order',
+  summary: 'Create Order 🔒',
   security: [{ bearerAuth: [] }],
   request: {
     body: {

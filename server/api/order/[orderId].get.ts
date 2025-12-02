@@ -73,7 +73,7 @@ registry.registerPath({
   method: 'get',
   tags: ['Order'],
   path: 'api/order/:orderId',
-  summary: 'Get order detail',
+  summary: 'Get order detail 🔒',
   security: [{ bearerAuth: [] }],
   request: {
     params: schema,
