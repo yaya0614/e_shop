@@ -67,13 +67,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
+import { FetchError } from 'ofetch';
 
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
 const loading = ref(false);
+const router = useRouter();
 
 const handleLogin = async () => {
   if (!email.value || password.value.length < 8) {
