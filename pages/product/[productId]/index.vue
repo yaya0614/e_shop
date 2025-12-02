@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Carousel,
@@ -7,10 +9,63 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+// 追蹤數量 (從下拉選單獲取)
+const selectedQuantity = ref(1);
+
+// 追蹤提示訊息狀態
+const showSuccessMessage = ref(false); // 預設false
+
+interface CartItem {
+  id: number;
+  description: string;
+  price: number;
+  imagePath: string;
+  quantity?: number;
+}
+// 當前產品資料(模擬)
+const currentProduct: CartItem = {
+  id: 101,
+  description: '【聲音課程】方序中生活設計提案 (有聲書)',
+  price: 599,
+  imagePath: 'https://picsum.photos/200/300',
+};
+// --- 加入購物車 ---
+const handleAddToCart = () => {
+  const quantity = Number(selectedQuantity.value); //使用者選取下拉選單的值
+  // 讀取購物車
+  const cartJson = localStorage.getItem('myCart') || '[]';
+  const cartItems: CartItem[] = JSON.parse(cartJson) as CartItem[];
+  // 看是否已存在
+  const idx = cartItems.findIndex(
+    (item: CartItem) => item.id === currentProduct.id,
+  );
+
+  if (idx > -1) {
+    cartItems[idx].quantity = Number(cartItems[idx].quantity) + quantity; // 已存在= 增加數量
+  } else {
+    cartItems.push({ ...currentProduct, quantity }); // 不存在=新增至購物車
+  }
+
+  localStorage.setItem('myCart', JSON.stringify(cartItems)); //儲存回去
+
+  showSuccessMessage.value = true;
+  setTimeout(() => (showSuccessMessage.value = false), 3000);
+};
 </script>
 
 <template>
   <div class="flex flex-col h-screen max-w-full gap-2">
+    <div
+      v-if="showSuccessMessage"
+      class="fixed bottom-4 right-4 z-50 transition-opacity duration-300 w-80"
+    >
+      <Alert
+        class="bg-green-500 text-white border-none flex gap-2 items-center"
+      >
+        <CheckCircle2 class="w-4 h-4" />
+        <AlertTitle>✔已成功加入購物車！</AlertTitle>
+      </Alert>
+    </div>
     <div class="flex flex-row mt-10 w-full px-40 gap-4">
       <div class="aspect-square bg-amber-600">
         <img
@@ -44,16 +99,22 @@ import {
         <div class="flex flex-col gap-1">
           <p>數量:</p>
           <select
+            v-model="selectedQuantity"
             class="bg-gray-200 border-2 rounded-lg border-gray-300 h-10 px-2"
           >
-            <option value="">1</option>
-            <option value="">2</option>
-            <option value="">3</option>
+            <option :value="1">1</option>
+            <option :value="2">2</option>
+            <option :value="3">3</option>
           </select>
         </div>
 
         <Button class="bg-gray-600 w-[200px] mx-auto"> 直接購買 </Button>
-        <Button class="bg-blue-500 w-[200px] mx-auto"> 加入購物車 </Button>
+        <Button
+          class="bg-blue-500 w-[200px] mx-auto"
+          @click="handleAddToCart"
+        >
+          加入購物車
+        </Button>
       </div>
     </div>
     <p class="text-orange-400 mt-10 mx-40 text-xl font-semibold">作者介紹</p>
@@ -83,7 +144,7 @@ import {
                 <div class="p-1">
                   <Card>
                     <CardContent
-                      class="flex aspect-[3/4] items-center justify-center p-6"
+                      class="flex aspect-3/4 items-center justify-center p-6"
                     >
                       <span class="text-xl font-semibold">{{ index + 1 }}</span>
                     </CardContent>
