@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
+import { registry } from '../../utils/openapi';
+import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
@@ -71,7 +73,8 @@ registry.registerPath({
   method: 'get',
   tags: ['Order'],
   path: 'api/order/:orderId',
-  summary: 'get order detail',
+  summary: 'Get order detail',
+  security: [{ bearerAuth: [] }],
   request: {
     params: schema,
   },
@@ -92,10 +95,36 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Unauthorized - Invalid or missing token',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
 
 export default defineEventHandler(async (event) => {
+  const auth: AuthContextPayload = event.context.auth;
+
+  if (!auth.authenticated) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  if (!auth.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  const userId = auth.userId;
+
   const orderId = getRouterParam(event, 'orderId');
 
   if (!orderId) {
@@ -108,6 +137,7 @@ export default defineEventHandler(async (event) => {
   const orderdetail = await prisma.order.findFirst({
     where: {
       id: orderId,
+      userId,
     },
     include: {
       products: {
@@ -126,11 +156,13 @@ export default defineEventHandler(async (event) => {
       },
     },
   });
+
   if (!orderdetail) {
     throw createError({
       statusCode: 404,
       message: 'Not found Order',
     });
   }
+
   return orderdetail;
 });

@@ -2,17 +2,9 @@ import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
 import { registry } from '../../utils/openapi';
+import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
-
-const UserSchema = z
-  .object({
-    userId: z.string().openapi({
-      description: 'ID of the user whose order history is requested',
-      example: 'a91b32dd-d837-4d78-85f4-28378916a3dc',
-    }),
-  })
-  .openapi('GetOrderHistoryRequest');
 
 const OrderProductItemSchema = z
   .object({
@@ -86,10 +78,8 @@ registry.registerPath({
   method: 'get',
   path: '/api/order',
   tags: ['Order'],
-  summary: 'get order history',
-  request: {
-    query: UserSchema,
-  },
+  summary: 'Get order history',
+  security: [{ bearerAuth: [] }],
   responses: {
     200: {
       description: 'Get order history successfully',
@@ -107,20 +97,36 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Unauthorized - Invalid or missing token',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
 
 export default defineEventHandler(async (event) => {
-  const query = getQuery(event);
-  const userId_result = UserSchema.safeParse(query);
+  const auth: AuthContextPayload = event.context.auth;
 
-  if (!userId_result.success) {
+  if (!auth.authenticated) {
     throw createError({
-      statusCode: 400,
-      message: 'Not found User id',
+      statusCode: 401,
+      message: 'Unauthorized',
     });
   }
-  const { userId } = userId_result.data;
+
+  if (!auth.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  const userId = auth.userId;
+
   const orderhistory = await prisma.user.findFirst({
     where: {
       id: userId,

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
+import { registry } from '../../utils/openapi';
+import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
@@ -11,11 +13,6 @@ const OrderProductSchema = z.object({
 
 const schema = z
   .object({
-    userId: z.string().openapi({
-      description: 'ID of the user who created the order',
-      example: 'a91b32dd-d837-4d78-85f4-28378916a3dc',
-    }),
-
     products: z.array(OrderProductSchema).openapi({
       description: 'List of order products',
       example: [
@@ -54,6 +51,7 @@ registry.registerPath({
   path: '/api/order',
   tags: ['Order'],
   summary: 'Create Order',
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -80,10 +78,36 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Unauthorized - Invalid or missing token',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
 
 export default defineEventHandler(async (event) => {
+  const auth: AuthContextPayload = event.context.auth;
+
+  if (!auth.authenticated) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  if (!auth.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  const userId = auth.userId;
+
   const payload = await readValidatedBody(event, schema.safeParse);
   if (!payload.success) {
     throw createError({
@@ -174,7 +198,7 @@ export default defineEventHandler(async (event) => {
       data: {
         price: price,
         status: 'RECEIVED',
-        userId: payload.data.userId,
+        userId: userId,
         couponId: payload.data.couponId,
       },
     });
