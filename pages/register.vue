@@ -21,6 +21,7 @@
           v-model="name"
           type="text"
           required
+          autocomplete="name"
           placeholder="請輸入您的姓名"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150"
         />
@@ -37,6 +38,7 @@
           v-model="email"
           type="email"
           required
+          autocomplete="email"
           placeholder="請輸入 Email"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150"
         />
@@ -53,6 +55,7 @@
           v-model="password"
           type="password"
           required
+          autocomplete="new-password"
           placeholder="至少 8 碼，包含一個大寫字母 (例如: MyPassword123)"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150"
         />
@@ -68,6 +71,7 @@
           id="address"
           v-model="address"
           type="text"
+          autocomplete="street-address"
           placeholder="例如: 台北市信義區"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150"
         />
@@ -98,8 +102,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
+import { FetchError } from 'ofetch';
 
 const name = ref('');
 const email = ref('');
@@ -107,6 +112,8 @@ const password = ref('');
 const address = ref(''); // 可選欄位
 const errorMessage = ref('');
 const loading = ref(false);
+
+const router = useRouter();
 
 const handleRegister = async () => {
   if (password.value.length < 8 || !/[A-Z]/.test(password.value)) {
@@ -118,7 +125,6 @@ const handleRegister = async () => {
   errorMessage.value = '';
 
   try {
-    // API 路徑保持正確的 /api/auth/sign-up
     const response = await $fetch('/api/auth/sign-up', {
       method: 'POST',
       body: {
@@ -132,14 +138,21 @@ const handleRegister = async () => {
     const token = response.token;
     localStorage.setItem('authToken', token);
 
-    await navigateTo('/', { replace: true });
+    router.push('/home');
   } catch (error) {
-    const apiMessage = error.data?.message;
+    if (error instanceof FetchError) {
+      const apiMessage = error.message;
 
-    if (error.statusCode === 400) {
-      errorMessage.value = `註冊失敗：${apiMessage}`;
-    } else {
-      errorMessage.value = '伺服器連線或發生未知錯誤。';
+      switch (error.statusCode) {
+        case 400:
+          errorMessage.value = `註冊失敗：${apiMessage}`;
+          break;
+        case 409:
+          errorMessage.value = '此 Email 已被註冊';
+          break;
+        default:
+          errorMessage.value = '伺服器連線或發生未知錯誤。';
+      }
     }
   } finally {
     loading.value = false;

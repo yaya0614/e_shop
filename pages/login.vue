@@ -19,6 +19,7 @@
           v-model="email"
           type="email"
           required
+          autocomplete="email"
           placeholder="請輸入 Email"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
         />
@@ -35,6 +36,7 @@
           v-model="password"
           type="password"
           required
+          autocomplete="current-password"
           placeholder="至少 8 個字元"
           class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
         />
@@ -83,7 +85,7 @@ const handleLogin = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await $fetch('/api/auth/sign-in', {
+    await $fetch('/api/auth/sign-in', {
       method: 'POST',
       body: {
         email: email.value,
@@ -91,19 +93,20 @@ const handleLogin = async () => {
       },
     });
 
-    const token = response.token;
-    localStorage.setItem('authToken', token);
-
-    await navigateTo('/', { replace: true });
+    router.push('/home');
   } catch (error) {
-    const apiMessage = error.data?.message;
-
-    if (error.statusCode === 401) {
-      errorMessage.value = apiMessage;
-    } else if (error.statusCode === 400) {
-      errorMessage.value = `輸入資料格式錯誤：${apiMessage}`;
-    } else {
-      errorMessage.value = '連線或伺服器發生未預期錯誤。';
+    if (error instanceof FetchError) {
+      const apiMessage = error.message;
+      switch (error.statusCode) {
+        case 401:
+          errorMessage.value = apiMessage;
+          break;
+        case 400:
+          errorMessage.value = `輸入資料格式錯誤：${apiMessage}`;
+          break;
+        default:
+          errorMessage.value = '連線或伺服器發生未預期錯誤。';
+      }
     }
   } finally {
     loading.value = false;
