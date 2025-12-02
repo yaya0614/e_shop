@@ -3,6 +3,7 @@ import type { TokenPayload } from '~/types/auth';
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event);
+
   event.context.auth = {
     authenticated: false,
     userId: null,
@@ -15,10 +16,7 @@ export default defineEventHandler((event) => {
 
   const authorization = event.headers.get('Authorization');
   if (!authorization) {
-    throw createError({
-      statusCode: 401,
-      message: 'Unauthorized',
-    });
+    return;
   }
 
   const token = authorization.replace('Bearer ', '');
