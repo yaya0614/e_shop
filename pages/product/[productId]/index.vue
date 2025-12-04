@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Alert, AlertTitle } from '@/components/ui/alert';
+import { toast } from 'vue-sonner';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Carousel,
@@ -9,11 +10,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+
 // 追蹤數量 (從下拉選單獲取)
 const selectedQuantity = ref(1);
-
-// 追蹤提示訊息狀態
-const showSuccessMessage = ref(false); // 預設false
 
 interface CartItem {
   id: number;
@@ -47,25 +46,11 @@ const handleAddToCart = () => {
   }
 
   localStorage.setItem('myCart', JSON.stringify(cartItems)); //儲存回去
-
-  showSuccessMessage.value = true;
-  setTimeout(() => (showSuccessMessage.value = false), 3000);
 };
 </script>
 
 <template>
   <div class="flex flex-col h-screen max-w-full gap-2">
-    <div
-      v-if="showSuccessMessage"
-      class="fixed bottom-4 right-4 z-50 transition-opacity duration-300 w-80"
-    >
-      <Alert
-        class="bg-green-500 text-white border-none flex gap-2 items-center"
-      >
-        <CheckCircle2 class="w-4 h-4" />
-        <AlertTitle>✔已成功加入購物車！</AlertTitle>
-      </Alert>
-    </div>
     <div class="flex flex-row mt-10 w-full px-40 gap-4">
       <div class="aspect-square bg-amber-600">
         <img
@@ -110,8 +95,16 @@ const handleAddToCart = () => {
 
         <Button class="bg-gray-600 w-[200px] mx-auto"> 直接購買 </Button>
         <Button
-          class="bg-blue-500 w-[200px] mx-auto"
-          @click="handleAddToCart"
+          @click="
+            handleAddToCart(); //執行加入購物車
+            // 2. 執行顯示提示訊息
+            toast('成功加入購物車!', {
+              action: {
+                label: '檢視購物車',
+                onClick: () => navigateTo('/shop'),
+              },
+            });
+          "
         >
           加入購物車
         </Button>
