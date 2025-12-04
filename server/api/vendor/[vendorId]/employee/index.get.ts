@@ -44,7 +44,7 @@ registry.registerPath({
   method: 'get',
   tags: ['Vendor'],
   path: 'api/vendor/{vendorId}/employee',
-  summary: 'Get employees by vendor ID 🔒',
+  summary: 'Get Employees 🔒',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
