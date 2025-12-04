@@ -12,11 +12,21 @@ model Vendor {
   orders Order[]
 }
 
+model SubCategory {
+  id   String @id @default(uuid())
+  name String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  products Product[]
+}
+
 model Category {
   id   String @id @default(uuid())
   name String
 
-  products Product[]
+  subCategories SubCategory[]
 }
 
 model Product {
@@ -34,10 +44,11 @@ model Product {
   vendorId String
   vendor   Vendor @relation(fields: [vendorId], references: [id])
 
-  categories    Category[]
   logs          ProductLog[]
   cartProducts  CartProduct[]
   orderProducts OrderProduct[]
+  subCategory   SubCategory?   @relation(fields: [subCategoryId], references: [id])
+  subCategoryId String?
 }
 
 enum EmployeeRole {
