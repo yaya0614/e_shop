@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
 import { registry } from '../../utils/openapi';
+import { generateAndSetToken } from '../../utils/jwt';
 
 extendZodWithOpenApi(z);
 
@@ -94,33 +94,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const config = useRuntimeConfig(event);
-
-  if (!config.jwtSecret) {
-    throw createError({
-      statusCode: 500,
-      message: 'JWT secret not set in environment variables',
-    });
-  }
-
-  const token = jwt.sign(
-    {
-      sub: user.id,
-      iss: 'e-shop.ntut.edu.tw',
-      role: user.role,
-    },
-    config.jwtSecret,
-    {
-      expiresIn: '7d',
-    },
-  );
-
-  setCookie(event, 'auth.token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: '/',
+  const token = generateAndSetToken(event, {
+    userId: user.id,
+    role: user.role,
   });
 
   return {
