@@ -32,7 +32,7 @@ const responseSchema = z
       }),
     ),
   })
-  .openapi('GetVendorResponse');
+  .openapi('GetVendorsResponse');
 
 const errorSchema = z
   .object({
