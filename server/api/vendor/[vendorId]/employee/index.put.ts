@@ -7,9 +7,9 @@ import { prisma } from '~/lib/prisma';
 extendZodWithOpenApi(z);
 
 const schema = z.object({
-  email: z.email().openapi({
-    description: 'User email',
-    example: 'john.doe@example.com',
+  id: z.string().openapi({
+    description: 'Employee ID',
+    example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
   }),
   role: z.enum(EmployeeRole).openapi({
     description: 'Employee role',
@@ -17,23 +17,16 @@ const schema = z.object({
   }),
 });
 
-const responseSchema = z.object({
-  id: z.string().openapi({
-    description: 'Employee ID',
-    example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
-  }),
-});
-
 const errorSchema = z.object({
   statusCode: z.number().openapi({ example: 400 }),
-  message: z.string().openapi({ example: 'Invalid userId' }),
+  message: z.string().openapi({ example: 'Invalid employee ID' }),
 });
 
 registry.registerPath({
-  method: 'post',
+  method: 'put',
   tags: ['Vendor'],
   path: 'api/vendor/{vendorId}/employee',
-  summary: 'Create Employee 🔒',
+  summary: 'Update Employee Role🔒',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -45,13 +38,8 @@ registry.registerPath({
     },
   },
   responses: {
-    201: {
-      description: 'Create employee by vendor ID successfully',
-      content: {
-        'application/json': {
-          schema: responseSchema,
-        },
-      },
+    204: {
+      description: 'Update employee successfully',
     },
     400: {
       description: 'Bad request',
@@ -132,42 +120,36 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const user = await prisma.user.findUnique({
-    where: {
-      email: payload.data.email,
-    },
-  });
-
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      message: 'User not found',
-    });
-  }
-
   const existingEmployee = await prisma.employee.findFirst({
     where: {
       vendorId: vendorId,
-      userId: user.id,
+      id: payload.data.id,
     },
   });
 
-  if (existingEmployee) {
+  if (!existingEmployee) {
     throw createError({
-      statusCode: 409,
-      message: 'Employee already exists',
+      statusCode: 404,
+      message: 'Employee not found',
     });
   }
 
-  const employee = await prisma.employee.create({
+  if (
+    auth.vendor.role !== EmployeeRole.OWNER &&
+    payload.data.role === EmployeeRole.OWNER
+  ) {
+    throw createError({
+      statusCode: 403,
+      message: 'You are not allowed to update employee role',
+    });
+  }
+
+  await prisma.employee.update({
+    where: {
+      id: payload.data.id,
+    },
     data: {
-      vendorId: vendorId,
-      userId: user.id,
       role: payload.data.role,
     },
   });
-
-  return {
-    id: employee.id,
-  };
 });
