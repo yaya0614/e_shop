@@ -12,6 +12,7 @@ export default defineEventHandler((event) => {
       code: null,
       message: null,
     },
+    vendor: null,
   };
 
   let token: string | null = null;
@@ -51,6 +52,7 @@ export default defineEventHandler((event) => {
         event.context.auth.authenticated = true;
         event.context.auth.userId = decoded.sub;
         event.context.auth.role = decoded.role;
+        event.context.auth.vendor = decoded.vendor;
       }
     } catch {
       event.context.auth.error = {

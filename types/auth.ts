@@ -1,4 +1,4 @@
-import type { UserRole } from '~/prisma/generated/enums';
+import type { EmployeeRole, UserRole } from '~/prisma/generated/enums';
 
 export interface TokenPayload {
   sub: string;
@@ -6,6 +6,10 @@ export interface TokenPayload {
   exp: number;
   iat: number;
   role: UserRole;
+  vendor: {
+    id: string;
+    role: EmployeeRole;
+  } | null;
 }
 
 export interface AuthContextPayload {
@@ -15,4 +19,9 @@ export interface AuthContextPayload {
     code: number | null;
     message: string | null;
   };
+  role: UserRole;
+  vendor: {
+    id: string;
+    role: EmployeeRole;
+  } | null;
 }
