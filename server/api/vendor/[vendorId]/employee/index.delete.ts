@@ -11,10 +11,6 @@ const schema = z.object({
     description: 'Employee ID',
     example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
   }),
-  role: z.enum(EmployeeRole).openapi({
-    description: 'Employee role',
-    example: EmployeeRole.CLERK,
-  }),
 });
 
 const errorSchema = z.object({
@@ -23,15 +19,12 @@ const errorSchema = z.object({
 });
 
 registry.registerPath({
-  method: 'put',
+  method: 'delete',
   tags: ['Vendor'],
   path: 'api/vendor/{vendorId}/employee',
-  summary: 'Update Employee Role🔒',
+  summary: 'Delete Employee 🔒',
   security: [{ bearerAuth: [] }],
   request: {
-    params: z.object({
-      vendorId: z.string().openapi({}),
-    }),
     body: {
       content: {
         'application/json': {
@@ -39,10 +32,13 @@ registry.registerPath({
         },
       },
     },
+    params: z.object({
+      vendorId: z.string().openapi({}),
+    }),
   },
   responses: {
     204: {
-      description: 'Update employee successfully',
+      description: 'Delete employee successfully',
     },
     400: {
       description: 'Bad request',
@@ -109,14 +105,14 @@ export default defineEventHandler(async (event) => {
   if (!allowedRoles.includes(auth.vendor.role)) {
     throw createError({
       statusCode: 403,
-      message: 'You are not allowed to update employee role for this vendor',
+      message: 'You are not allowed to delete employee for this vendor',
     });
   }
 
   const existingEmployee = await prisma.employee.findFirst({
     where: {
-      vendorId: vendorId,
       id: payload.data.id,
+      vendorId: vendorId,
     },
   });
 
@@ -127,23 +123,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (
-    auth.vendor.role !== EmployeeRole.OWNER &&
-    payload.data.role === EmployeeRole.OWNER
-  ) {
-    throw createError({
-      statusCode: 403,
-      message: 'You are not allowed to update employee role',
-    });
-  }
-
-  await prisma.employee.update({
+  await prisma.employee.delete({
     where: {
       id: payload.data.id,
       vendorId: vendorId,
-    },
-    data: {
-      role: payload.data.role,
     },
   });
 });

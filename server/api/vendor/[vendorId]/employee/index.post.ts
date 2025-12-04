@@ -36,6 +36,9 @@ registry.registerPath({
   summary: 'Create Employee 🔒',
   security: [{ bearerAuth: [] }],
   request: {
+    params: z.object({
+      vendorId: z.string().openapi({}),
+    }),
     body: {
       content: {
         'application/json': {
@@ -91,6 +94,7 @@ registry.registerPath({
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
   const payload = await readValidatedBody(event, schema.safeParse);
+  const allowedRoles: EmployeeRole[] = [EmployeeRole.OWNER, EmployeeRole.ADMIN];
 
   if (!payload.success) {
     throw createError({
@@ -122,13 +126,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (
-    auth.vendor.role !== EmployeeRole.OWNER &&
-    auth.vendor.role !== EmployeeRole.ADMIN
-  ) {
+  if (!allowedRoles.includes(auth.vendor.role)) {
     throw createError({
       statusCode: 403,
-      message: 'You are not allowed to create employee',
+      message: 'You are not allowed to create employee for this vendor',
     });
   }
 
