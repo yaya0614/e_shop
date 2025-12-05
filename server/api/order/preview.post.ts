@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
+import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
@@ -80,8 +81,21 @@ registry.registerPath({
 });
 
 export default defineEventHandler(async (event) => {
-  const payload = await readValidatedBody(event, schema.safeParse);
+  const auth: AuthContextPayload = event.context.auth;
+  if (!auth.authenticated) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+  if (!auth.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
 
+  const payload = await readValidatedBody(event, schema.safeParse);
   if (!payload.success) {
     throw createError({
       statusCode: 400,
@@ -90,7 +104,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const { products, couponId } = payload.data;
-
   let currenPrice = 0;
 
   for (const product of products) {
@@ -107,11 +120,10 @@ export default defineEventHandler(async (event) => {
     if (!product_info) {
       throw createError({
         statusCode: 404,
-        message: 'Not Found productId',
+        message: 'Not Found ProductId',
       });
     }
     const price = product_info.discountPrice ?? product_info.price;
-
     currenPrice += product.quantity * price;
   }
 
@@ -129,13 +141,14 @@ export default defineEventHandler(async (event) => {
         used: true,
       },
     });
+
     if (!existsCoupon) {
       throw createError({
         statusCode: 404,
         message: 'Coupon not found',
       });
     }
-    if (existsCoupon.used) {
+    if (!existsCoupon.used) {
       if (existsCoupon.minPrice && currenPrice < existsCoupon.minPrice) {
         throw createError({
           statusCode: 400,
