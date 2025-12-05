@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
@@ -78,6 +77,14 @@ registry.registerPath({
         },
       },
     },
+    409: {
+      description: 'User already exists',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
 
@@ -106,7 +113,7 @@ export default defineEventHandler(async (event) => {
   });
   if (existingUser) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'User already exists',
     });
   }
@@ -120,24 +127,19 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  if (!process.env.JWT_SECRET) {
+  const config = useRuntimeConfig(event);
+
+  if (!config.jwtSecret) {
     throw createError({
       statusCode: 500,
       message: 'JWT secret not set in environment variables',
     });
   }
 
-  const token = jwt.sign(
-    {
-      sub: user.id,
-      iss: 'e-shop.ntut.edu.tw',
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: '7d',
-    },
-  );
+  const token = generateAndSetToken(event, {
+    userId: user.id,
+    role: user.role,
+  });
 
   return {
     token,
