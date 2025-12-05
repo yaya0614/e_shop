@@ -18,7 +18,7 @@ const category_name = [
 </script>
 
 <template>
-  <div class="flex flex-col h-screen w-screen">
+  <div class="flex-1 flex-col w-full overflow-x-hidden">
     <headerBar />
     <div class="flex flex-row justify-between w-full mt-4">
       <p class="text-muted-foreground text-4xl leading-tight ml-10 flex-1"></p>
@@ -32,9 +32,12 @@ const category_name = [
         </Button>
       </ButtonGroup>
     </div>
-    <div class="flex justify-center-safe w-full mt-2 mb-2">
-      <NavigationMenu :viewport="false">
-        <div class="gap 50 z-4">
+    <div class="flex justify-center-safe mt-2 mb-2">
+      <NavigationMenu
+        :viewport="false"
+        class="w-full"
+      >
+        <div class="z-4">
           <NavigationMenuList class="gap-12">
             <div
               v-for="value in category_name"

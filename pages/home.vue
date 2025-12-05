@@ -114,12 +114,10 @@ const callback = (id: number) => {
         >
           <cardModel
             :id="product.id"
-            ,
             :description="product.descrition"
             :path-test="product.pathtest"
             :price="product.price"
             :navigate_detail="callback"
-            triger_card()
           ></cardModel>
         </div>
       </div>

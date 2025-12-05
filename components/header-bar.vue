@@ -7,7 +7,7 @@ function go(path: string) {
 </script>
 
 <template>
-  <div class="flex flex-row sticky top-0 z-10 bg-gray-300 py-2">
+  <div class="flex flex-row sticky top-0 z-10 bg-gray-300 py-2 w-full">
     <div class="ml-10">
       <Button
         class="text-3xl"
