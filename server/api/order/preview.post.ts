@@ -48,7 +48,7 @@ registry.registerPath({
   method: 'post',
   path: '/api/order/preview/',
   tags: ['Order'],
-  summary: 'Get Order Price',
+  summary: 'Get Order Price 🔒',
   description:
     'Preview order details and calculate total price before creating order',
   request: {
