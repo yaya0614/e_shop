@@ -3,17 +3,9 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
 import { registry } from '../../utils/openapi';
 import { CouponType } from '~/prisma/generated/client';
+import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
-
-const schema = z
-  .object({
-    userId: z.string().openapi({
-      description: 'ID of the user',
-      example: 'a91b32dd-d837-4d78-85f4-28378916a3dc',
-    }),
-  })
-  .openapi('GetOrderDetailQuery');
 
 const responsesSchema = z
   .object({
@@ -63,9 +55,6 @@ registry.registerPath({
   tags: ['Coupon'],
   summary: "Get user's coupon",
   description: 'Get all available coupons for a specific user',
-  request: {
-    query: schema,
-  },
   responses: {
     200: {
       description: 'Get order history successfully',
@@ -87,16 +76,22 @@ registry.registerPath({
 });
 
 export default defineEventHandler(async (event) => {
-  const query = getQuery(event);
-  const userId_result = schema.safeParse(query);
+  const auth: AuthContextPayload = event.context.auth;
 
-  if (!userId_result.success) {
+  if (!auth.authenticated) {
     throw createError({
-      statusCode: 400,
-      message: userId_result.error.message,
+      statusCode: 401,
+      message: 'Unauthorized',
     });
   }
-  const { userId } = userId_result.data;
+  if (!auth.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
+  }
+
+  const userId = auth.userId;
   const available_coupon = await prisma.coupon.findMany({
     where: {
       userId: userId,
