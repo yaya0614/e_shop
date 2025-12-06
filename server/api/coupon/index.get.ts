@@ -53,7 +53,7 @@ registry.registerPath({
   method: 'get',
   path: '/api/coupon',
   tags: ['Coupon'],
-  summary: "Get user's coupon",
+  summary: "Get User's Coupon 🔒",
   description: 'Get all available coupons for a specific user',
   responses: {
     200: {

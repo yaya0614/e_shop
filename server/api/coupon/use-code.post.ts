@@ -46,7 +46,7 @@ registry.registerPath({
   method: 'post',
   path: '/api/coupon/use-code',
   tags: ['Coupon'],
-  summary: 'Use coupon code',
+  summary: 'Use Coupon Code 🔒',
   description:
     'Validate a coupon code and return the discount information without consuming or assigning the coupon',
   request: {
@@ -111,13 +111,13 @@ export default defineEventHandler(async (event) => {
   if (!specifed_coupon) {
     throw createError({
       statusCode: 404,
-      message: 'The code is not exist',
+      message: 'Coupon code does not exist',
     });
   }
-  if (specifed_coupon.userId) {
+  if (specifed_coupon.userId !== null) {
     throw createError({
       statusCode: 400,
-      message: 'This coupon alerady has user used',
+      message: 'This coupon has alerady been used',
     });
   }
 

@@ -78,7 +78,7 @@ registry.registerPath({
   method: 'post',
   path: 'api/admin/coupon',
   tags: ['Admin'],
-  summary: 'Create Coupon',
+  summary: 'Create Coupon 🔒',
   description:
     'Create a new coupon with specific discount or percentage. Only admin can use this endpoint',
   request: {
