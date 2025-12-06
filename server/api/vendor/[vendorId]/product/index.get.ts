@@ -5,64 +5,48 @@ import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
-const schema = z
-  .object({
-    productName: z.string().openapi({
-      description: '',
-      example: '',
-    }),
-    productDescription: z.string().optional().openapi({
-      description: '',
-      example: '',
-    }),
-    price: z.number().int().openapi({
-      description: '',
-      example: '',
-    }),
-    quantity: z.number().int().openapi({
-      description: '',
-      example: '',
-    }),
-    coverId: z.string().optional().openapi({
-      description: '',
-      example: '',
-    }),
-  })
-  .openapi('CreateProductPayload');
-
 const schemaResponses = z.object({
-  status: z.literal('success').openapi({
-    description: 'Product is created successfully',
-    example: 'success',
-  }),
+  products: z
+    .array(
+      z.object({
+        name: z
+          .string()
+          .openapi({ description: 'Product name', example: 'Product 1' }),
+        description: z.string().openapi({
+          description: 'Product description',
+          example: 'Product description',
+        }),
+        price: z
+          .number()
+          .openapi({ description: 'Product price', example: 100 }),
+        discountPrice: z
+          .number()
+          .openapi({ description: 'Product discount price', example: 90 }),
+        quantity: z
+          .number()
+          .openapi({ description: 'Product quantity', example: 100 }),
+        coverId: z
+          .string()
+          .openapi({ description: 'Product cover ID', example: '123' }),
+      }),
+    )
+    .openapi('ProductsResponse'),
 });
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({
-      example: 400,
-    }),
-  })
-  .openapi('ErrorResponse');
+const errorSchema = z.object({
+  statusCode: z.number().openapi({ example: 400 }),
+  message: z.string().openapi({ example: 'Invalid vendor ID' }),
+});
 
 registry.registerPath({
-  method: 'post',
-  path: 'api/vendor/[vendorId]/',
+  method: 'get',
+  path: 'api/vendor/[vendorId]/product',
   tags: ['Product'],
-  summary: 'Create Product',
-  description: 'Vendor create product in store',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: schema,
-        },
-      },
-    },
-  },
+  summary: 'Get Products',
+  description: 'Get all products for a vendor',
   responses: {
     200: {
-      description: 'Create Product Successfully',
+      description: 'Products found',
       content: {
         'application/json': {
           schema: schemaResponses,
@@ -77,8 +61,33 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Forbidden',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    404: {
+      description: 'Products not found',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
+
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
   const vendorId = getRouterParam(event, 'vendorId');
@@ -89,6 +98,7 @@ export default defineEventHandler(async (event) => {
       message: 'Unauthorized',
     });
   }
+
   if (!vendorId) {
     throw createError({
       statusCode: 400,
@@ -102,11 +112,27 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const payload = await readValidatedBody(event, schema.safeParse);
-  if (!payload.success) {
+  const products = await prisma.product.findMany({
+    where: {
+      id: vendorId,
+    },
+    select: {
+      name: true,
+      description: true,
+      price: true,
+      discountPrice: true,
+      quantity: true,
+      coverId: true,
+    },
+  });
+  if (!products) {
     throw createError({
-      statusCode: 400,
-      message: payload.error.message,
+      statusCode: 404,
+      message: 'Products not found',
     });
   }
+
+  return {
+    products,
+  };
 });
