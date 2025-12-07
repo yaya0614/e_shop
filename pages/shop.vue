@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+const router = useRouter();
 
 interface CartItem {
   id: number;
@@ -60,7 +61,6 @@ const removeItem = (id: number) => {
     <h1 class="text-3xl font-bold mb-6">我的購物車</h1>
 
     <div class="border rounded-lg shadow-md overflow-hidden">
-      <!-- 表頭 -->
       <div
         class="grid grid-cols-[4fr_1fr_1.5fr_1fr_1fr] text-sm font-semibold text-gray-700 bg-gray-200 border-b"
       >
@@ -159,6 +159,7 @@ const removeItem = (id: number) => {
     >
       <button
         class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition cursor-pointer"
+        @click="router.push('/order')"
       >
         前往結帳
       </button>
