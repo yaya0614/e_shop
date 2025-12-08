@@ -40,10 +40,15 @@ const errorSchema = z.object({
 
 registry.registerPath({
   method: 'get',
-  path: 'api/vendor/[vendorId]/product',
+  path: 'api/vendor/{vendorId}/product',
   tags: ['Product'],
-  summary: 'Get Products',
+  summary: 'Get Products 🔒',
   description: 'Get all products for a vendor',
+  request: {
+    params: z.object({
+      vendorId: z.string().openapi({}),
+    }),
+  },
   responses: {
     200: {
       description: 'Products found',
@@ -90,8 +95,6 @@ registry.registerPath({
 
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
-  const vendorId = getRouterParam(event, 'vendorId');
-
   if (!auth.authenticated || !auth.userId) {
     throw createError({
       statusCode: 401,
@@ -99,12 +102,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const vendorId = getRouterParam(event, 'vendorId');
   if (!vendorId) {
     throw createError({
       statusCode: 400,
       message: 'Vendor ID is required',
     });
   }
+
   if (auth.vendor?.id !== vendorId) {
     throw createError({
       statusCode: 403,
@@ -114,7 +119,7 @@ export default defineEventHandler(async (event) => {
 
   const products = await prisma.product.findMany({
     where: {
-      id: vendorId,
+      vendorId: vendorId,
     },
     select: {
       name: true,

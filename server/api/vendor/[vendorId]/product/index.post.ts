@@ -8,24 +8,24 @@ extendZodWithOpenApi(z);
 const schema = z
   .object({
     productName: z.string().openapi({
-      description: '',
-      example: '',
+      description: 'The name of the book',
+      example: '做夢大天堂',
     }),
     productDescription: z.string().optional().openapi({
-      description: '',
-      example: '',
+      description: 'A brief description or introduction of the book',
+      example: '一封信，一段故事，在小鎮角落的雜貨店展開溫暖療癒的人生風景',
     }),
     price: z.number().int().openapi({
-      description: '',
-      example: '',
+      description: 'Book Price',
+      example: 350,
     }),
     quantity: z.number().int().openapi({
-      description: '',
-      example: '',
+      description: 'The available stock of this book',
+      example: 50,
     }),
     coverId: z.string().optional().openapi({
-      description: '',
-      example: '',
+      description: 'The ID of the book cover image',
+      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     }),
   })
   .openapi('CreateProductPayload');
@@ -47,11 +47,14 @@ const errorSchema = z
 
 registry.registerPath({
   method: 'post',
-  path: 'api/vendor/[vendorId]/',
+  path: 'api/vendor/{vendorId}/product/',
   tags: ['Product'],
-  summary: 'Create Product',
+  summary: 'Create Product 🔒',
   description: 'Vendor create product in store',
   request: {
+    params: z.object({
+      vendorId: z.string().openapi({}),
+    }),
     body: {
       content: {
         'application/json': {
@@ -81,14 +84,13 @@ registry.registerPath({
 });
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
-  const vendorId = getRouterParam(event, 'vendorId');
-
   if (!auth.authenticated || !auth.userId) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized',
     });
   }
+  const vendorId = getRouterParam(event, 'vendorId');
   if (!vendorId) {
     throw createError({
       statusCode: 400,

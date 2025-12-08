@@ -19,10 +19,16 @@ const errorSchema = z.object({
 
 registry.registerPath({
   method: 'delete',
-  path: 'api/vendor/[vendorId]/product/[productId]',
+  path: 'api/vendor/{vendorId}/product/{productId}',
   tags: ['Product'],
-  summary: 'Delete Product',
+  summary: 'Delete Product 🔒',
   description: 'Vendor delete product in store',
+  request: {
+    params: z.object({
+      vendorId: z.string().openapi({}),
+      productId: z.string().openapi({}),
+    }),
+  },
   responses: {
     200: {
       description: 'Delete Product Successfully',
@@ -45,14 +51,15 @@ registry.registerPath({
 
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
-  const vendorId = getRouterParam(event, 'vendorId');
-  const productId = getRouterParam(event, 'productId');
   if (!auth.authenticated || !auth.userId) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized',
     });
   }
+
+  const vendorId = getRouterParam(event, 'vendorId');
+  const productId = getRouterParam(event, 'productId');
   if (!vendorId) {
     throw createError({
       statusCode: 400,
