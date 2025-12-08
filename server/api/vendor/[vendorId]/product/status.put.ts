@@ -122,15 +122,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const allProducts = VendorProducts.flatMap((vendor) =>
-    vendor.products.map((p: { id: string; status: ProductStatus }) => ({
-      id: p.id,
-      status: p.status,
-    })),
-  );
+  const product = prisma.product.findFirst({
+    where: {
+      vendorId,
+      id: productId,
+    },
+  });
 
-  const existProduct = allProducts.map((p) => p.id).includes(productId);
-  if (!existProduct) {
+  if (!product) {
     throw createError({
       statusCode: 404,
       message: 'Product not found',
@@ -138,7 +137,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await prisma.product.update({
-    where: { id: productId },
+    where: { id: productId, vendorId },
     data: {
       status: productStatus,
     },
