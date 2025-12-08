@@ -8,7 +8,10 @@ extendZodWithOpenApi(z);
 
 const FilterEnum = z.enum(['NEWEST', 'OLDEST', 'PRICE_LOW', 'PRICE_HIGH']);
 const schema = z.object({
-  keyword: z.string().optional().openapi({}),
+  keyword: z.string().optional().openapi({
+    description: 'Keyword to search products',
+    example: '心裡',
+  }),
   page: z
     .string()
     .default('1')
@@ -18,7 +21,7 @@ const schema = z.object({
     .default('30')
     .transform((val) => (isNaN(parseInt(val)) ? 30 : parseInt(val))),
   Filter: FilterEnum.optional().openapi({
-    description: 'Use Filter Product',
+    description: 'Filter used to determine product sorting order',
     example: 'NEWEST',
   }),
 });
