@@ -61,3 +61,27 @@ export function generateAndSetToken(
 
   return token;
 }
+
+export function getUserFromEvent(event: H3Event) {
+  const config = useRuntimeConfig(event);
+  const token = getCookie(event, 'auth.token');
+
+  if (!token) {
+    throw createError({ statusCode: 401, message: '未登入 (No token found)' });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      config.jwtSecret as string,
+    ) as jwt.JwtPayload;
+
+    return {
+      userId: decoded.sub as string,
+      role: decoded.role,
+      vendor: decoded.vendor,
+    };
+  } catch {
+    throw createError({ statusCode: 401, message: 'Token 無效或過期' });
+  }
+}
