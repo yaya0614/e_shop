@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, user: updatedUser };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Update Error:', error);
     throw createError({ statusCode: 500, message: '更新失敗' });
   }
