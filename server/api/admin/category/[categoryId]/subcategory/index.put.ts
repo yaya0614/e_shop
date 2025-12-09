@@ -29,7 +29,7 @@ registry.registerPath({
   method: 'put',
   path: 'api/admin/category/{categoryId}/subcategory',
   tags: ['Admin'],
-  summary: 'Update SubCategory Name',
+  summary: 'Update SubCategory Name 🔒',
   description: 'Update subcategory name by admin',
   request: {
     body: {

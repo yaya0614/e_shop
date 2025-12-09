@@ -25,7 +25,7 @@ registry.registerPath({
   method: 'post',
   path: 'api/admin/category',
   tags: ['Admin'],
-  summary: 'Create Category',
+  summary: 'Create Category 🔒',
   description: 'Create a new product category name',
   request: {
     body: {

@@ -25,7 +25,7 @@ registry.registerPath({
   method: 'post',
   path: 'api/admin/category/{categoryId}/subcategory',
   tags: ['Admin'],
-  summary: 'Create SubCategory',
+  summary: 'Create SubCategory 🔒',
   description: 'Create a new product subcategory name',
   request: {
     body: {

@@ -30,7 +30,7 @@ registry.registerPath({
   method: 'put',
   path: 'api/admin/category',
   tags: ['Admin'],
-  summary: 'Update Category Name',
+  summary: 'Update Category Name 🔒',
   description: 'Update category name by admin',
   request: {
     body: {
