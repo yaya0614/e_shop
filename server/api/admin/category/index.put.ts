@@ -4,11 +4,10 @@ import { prisma } from '~/lib/prisma';
 import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
-
 const Schema = z.object({
-  originCategoryName: z.string().min(2).max(8).openapi({
+  originCategoryNameId: z.uuid().openapi({
     description: 'Origin Category Name',
-    example: '心理學',
+    example: '103ece51-6a66-4622-9c82-1bcba0ae28ad',
   }),
   categoryName: z.string().min(2).max(8).openapi({
     description: 'Category Name',
@@ -85,16 +84,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { originCategoryName, categoryName } = payload.data;
-  const targetName = await prisma.category.findFirst({
+  const { originCategoryNameId, categoryName } = payload.data;
+  const targetReplaceId = await prisma.category.findUnique({
     where: {
-      name: originCategoryName,
-    },
-    select: {
-      id: true,
+      id: originCategoryNameId,
     },
   });
-  if (!targetName) {
+  if (!targetReplaceId) {
     throw createError({
       statusCode: 400,
       message: 'Origin Category Name Not Found',
@@ -115,7 +111,7 @@ export default defineEventHandler(async (event) => {
 
   await prisma.category.update({
     where: {
-      id: targetName.id,
+      id: originCategoryNameId,
     },
     data: {
       name: categoryName,

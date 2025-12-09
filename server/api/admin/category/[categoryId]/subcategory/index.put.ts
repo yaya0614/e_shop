@@ -5,12 +5,12 @@ import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 const Schema = z.object({
-  originsubCategoryName: z.string().min(2).max(8).openapi({
-    description: 'Origin Category Name',
-    example: '心理學',
+  originsubCategoryId: z.uuid().openapi({
+    description: 'Origin SubCategory Name Id',
+    example: '98def785-f10f-4814-bb8e-15460e3bf951',
   }),
   subCategoryName: z.string().min(2).max(8).openapi({
-    description: 'Category Name',
+    description: 'Replace SubCategory Name',
     example: '科幻',
   }),
 });
@@ -39,12 +39,6 @@ registry.registerPath({
         },
       },
     },
-    params: z.object({
-      categoryId: z.string().openapi({
-        description: 'Category Id',
-        example: '98def785-f10f-4814-bb8e-15460e3bf951',
-      }),
-    }),
   },
   responses: {
     200: {
@@ -82,14 +76,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const categoryId = getRouterParam(event, 'categoryId');
-  if (!categoryId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Category ID is required',
-    });
-  }
-
   const payload = await readValidatedBody(event, Schema.safeParse);
   if (!payload.success) {
     throw createError({
@@ -98,29 +84,26 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { originsubCategoryName, subCategoryName } = payload.data;
-  const targetName = await prisma.subCategory.findFirst({
+  const { originsubCategoryId, subCategoryName } = payload.data;
+  const targetReplaceId = await prisma.subCategory.findUnique({
     where: {
-      name: originsubCategoryName,
-    },
-    select: {
-      id: true,
+      id: originsubCategoryId,
     },
   });
 
-  if (!targetName) {
+  if (!targetReplaceId) {
     throw createError({
       statusCode: 400,
       message: 'Origin SubCategory Name Not Found',
     });
   }
 
-  const exitsCtegoryName = await prisma.subCategory.findFirst({
+  const exitsSubCtegoryName = await prisma.subCategory.findFirst({
     where: {
       name: subCategoryName,
     },
   });
-  if (exitsCtegoryName) {
+  if (exitsSubCtegoryName) {
     throw createError({
       statusCode: 400,
       message: 'SubCategory Name Already Exists',
@@ -129,7 +112,7 @@ export default defineEventHandler(async (event) => {
 
   await prisma.subCategory.update({
     where: {
-      id: targetName.id,
+      id: originsubCategoryId,
     },
     data: {
       name: subCategoryName,
