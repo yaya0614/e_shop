@@ -23,7 +23,7 @@ const schema = z
       ],
     }),
 
-    couponId: z.string().optional().openapi({
+    couponId: z.uuid().optional().openapi({
       description: 'Coupon object applied to the order',
       example: 'f98afd90-8410-4c18-9c5d-b993a9da65e1',
     }),
