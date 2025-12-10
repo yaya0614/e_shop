@@ -53,8 +53,7 @@ model Product {
   logs          ProductLog[]
   cartProducts  CartProduct[]
   orderProducts OrderProduct[]
-  subCategory   SubCategory?   @relation(fields: [subCategoryId], references: [id])
-  subCategoryId String?
+  subCategorys  SubCategory[]
 }
 
 enum EmployeeRole {

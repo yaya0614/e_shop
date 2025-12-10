@@ -192,6 +192,25 @@ export default defineEventHandler(async (event) => {
         break;
     }
   }
+  const orderVendorIds = await prisma.product.findMany({
+    where: {
+      id: {
+        in: payload.data.products.map((product) => product.productId),
+      },
+    },
+    select: {
+      vendorId: true,
+    },
+  });
+
+  if (
+    new Set(orderVendorIds.map((orderVendor) => orderVendor.vendorId)).size > 1
+  ) {
+    throw createError({
+      statusCode: 422,
+      message: 'All products must belong to the same vendor',
+    });
+  }
 
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
@@ -200,6 +219,7 @@ export default defineEventHandler(async (event) => {
         status: 'RECEIVED',
         userId: userId,
         couponId: payload.data.couponId,
+        vendorId: orderVendorIds[0].vendorId,
       },
     });
 
