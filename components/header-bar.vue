@@ -20,12 +20,12 @@ function go(path: string) {
     <div class="flex ml-auto mr-10 space-x-2">
       <Button
         variant="link"
-        @click="go('/login')"
+        @click="go('/auth/login')"
         >登入</Button
       >
       <Button
         variant="link"
-        @click="go('/register')"
+        @click="go('/auth/register')"
         >註冊</Button
       >
       <Button
