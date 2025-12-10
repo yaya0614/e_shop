@@ -110,8 +110,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-// 假設 useAuth 和 UserProfile 定義已存在於您的 /composables 和 /types 檔案中
-import { useAuth } from '~/composables/useAuth';
+// *** 修正匯入路徑 ***
+import { useAuth } from '~/lib/auth';
 import type { UserProfile } from '~/types/user';
 
 const { userProfile, updateProfile } = useAuth();
@@ -127,23 +127,20 @@ const editForm = reactive<
 });
 
 const isSubmitting = ref(false);
-// 錯誤訊息狀態
 const errors = reactive({ name: '', email: '' });
 const apiError = ref('');
 const successMessage = ref('');
 
-// 1. 組件載入時，從 Composable 載入當前資料
+// 組件載入時，從 Composable 載入當前資料
 onMounted(() => {
-  // 確保只在前端渲染時執行，防止 Nuxt SSR 錯誤
   if (import.meta.client) {
     editForm.name = userProfile.value.name;
     editForm.email = userProfile.value.email;
-    // 處理 null 或 undefined 的情況
     editForm.address = userProfile.value.address || '';
   }
 });
 
-// 2. 前端表單驗證邏輯
+// 前端表單驗證邏輯
 const validate = () => {
   errors.name = '';
   errors.email = '';
@@ -154,7 +151,6 @@ const validate = () => {
     isValid = false;
   }
 
-  // 簡易 Email 正則表達式驗證
   if (!editForm.email.trim() || !/\S+@\S+\.\S+/.test(editForm.email)) {
     errors.email = '請輸入有效的電子郵件地址。';
     isValid = false;
@@ -163,7 +159,7 @@ const validate = () => {
   return isValid;
 };
 
-// 3. 提交表單處理 (模擬 API 流程)
+// 提交表單處理 (模擬 API 流程)
 const handleSubmit = async () => {
   apiError.value = '';
   successMessage.value = '';
@@ -175,25 +171,21 @@ const handleSubmit = async () => {
   isSubmitting.value = true;
 
   try {
-    // 這裡未來會是 $fetch('/api/user/profile', { method: 'PATCH', body: editForm });
-    await new Promise((resolve) => setTimeout(resolve, 800)); // 模擬網路延遲
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // --- 模擬後端錯誤情境 (如：400 Bad Request) ---
+    // 模擬後端錯誤情境
     if (editForm.email === 'error@test.com') {
       throw new Error('此電子郵件已被其他帳戶使用或格式不符後端規範。');
     }
 
-    // 模擬更新成功
     await updateProfile(editForm);
 
     successMessage.value = '個人檔案已成功更新！即將返回概覽頁面。';
 
-    // 成功後延遲導航回概覽頁面
     setTimeout(() => {
       router.push('/profile/overview');
     }, 1500);
   } catch (err: any) {
-    // 處理 API 錯誤
     apiError.value = err.message || '連線或伺服器發生未預期錯誤。';
   } finally {
     isSubmitting.value = false;
@@ -206,5 +198,5 @@ const handleCancel = () => {
 </script>
 
 <style scoped>
-/* 這裡不需要額外的 <style> 標籤，因為所有樣式都透過 Tailwind 類別處理 */
+/* 保持簡潔，所有樣式透過 Tailwind 類別處理 */
 </style>
