@@ -144,87 +144,12 @@ When entering a vendor dashboard, the frontend calls `GET /api/vendor/{vendorId}
 
 #### Example Usage
 
-##### Basic Example - Entering Vendor Dashboard
+##### Using with Error Handling
 
 ```typescript
-// Frontend: User navigates to vendor dashboard
-const vendorId = '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1';
 
-try {
-  const response = await fetch(`/api/vendor/${vendorId}`, {
-    method: 'GET',
-    credentials: 'include', // Critical: Ensures cookies are sent
-  });
+import { FetchError } from 'ofetch';
 
-  if (response.ok) {
-    const vendorData = await response.json();
-    console.log('Vendor:', vendorData);
-    // Token is now exchanged and updated in cookies
-    // Subsequent vendor operations will use the enhanced token
-  }
-} catch (error) {
-  console.error('Failed to access vendor:', error);
-}
-```
-
-##### Complete Example - With Error Handling
-
-```typescript
-async function enterVendorDashboard(vendorId: string) {
-  try {
-    const response = await fetch(`/api/vendor/${vendorId}`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-
-      if (response.status === 401) {
-        // User is not authenticated
-        throw new Error('Please login first');
-      } else if (response.status === 403) {
-        // User is not an employee of this vendor
-        throw new Error('You are not authorized to access this vendor');
-      } else if (response.status === 404) {
-        // Vendor does not exist
-        throw new Error('Vendor not found');
-      }
-
-      throw new Error(error.message || 'Failed to access vendor');
-    }
-
-    const vendorData = await response.json();
-    console.log('Successfully entered vendor dashboard:', vendorData);
-
-    // Now you can make vendor-scoped API calls
-    // The token in cookies now includes vendor scope
-    return vendorData;
-  } catch (error) {
-    console.error('Error entering vendor dashboard:', error);
-    throw error;
-  }
-}
-
-// Usage
-enterVendorDashboard('02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1')
-  .then((vendor) => {
-    // Proceed with vendor operations
-    console.log(`Welcome to ${vendor.name}`);
-  })
-  .catch((error) => {
-    // Handle error (redirect to login, show error message, etc.)
-    console.error(error.message);
-  });
-```
-
-##### Using with Nuxt Composables
-
-```typescript
-// In a Nuxt component or composable
 const enterVendorDashboard = async (vendorId: string) => {
   try {
     // Using Nuxt's $fetch (automatically handles cookies)
@@ -233,17 +158,15 @@ const enterVendorDashboard = async (vendorId: string) => {
       credentials: 'include',
     });
 
-    console.log('Vendor data:', vendorData);
-    // Token is now exchanged with vendor scope
-
     return vendorData;
-  } catch (error: any) {
-    if (error.statusCode === 403) {
-      navigateTo('/unauthorized');
-    } else if (error.statusCode === 401) {
-      navigateTo('/auth/login');
+  } catch (error) {
+   if (error instanceof FetchError) {
+      if (error.data.statusCode === 403) {
+        // TODO: Show a message to the user
+        return;
+      }
+      // TODO: Show a message to the user
     }
-    throw error;
   }
 };
 ```
@@ -260,18 +183,6 @@ const orders = await fetch('/api/vendor/orders', {
   credentials: 'include', // Uses the enhanced token with vendor scope
 });
 
-// Example: Update product
-const updateProduct = await fetch('/api/vendor/products/123', {
-  method: 'PUT',
-  credentials: 'include',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    name: 'Updated Product Name',
-    price: 29.99,
-  }),
-});
 ```
 
 #### Understanding `credentials: 'include'`
