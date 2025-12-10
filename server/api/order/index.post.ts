@@ -207,7 +207,7 @@ export default defineEventHandler(async (event) => {
     new Set(orderVendorIds.map((orderVendor) => orderVendor.vendorId)).size > 1
   ) {
     throw createError({
-      statusCode: 400,
+      statusCode: 422,
       message: 'All products must belong to the same vendor',
     });
   }
