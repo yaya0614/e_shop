@@ -46,7 +46,7 @@ const responsesSchema = z.object({
       ),
     }),
   ),
-  month_price: z.object({
+  monthPrice: z.object({
     January: z.number().openapi({ example: 1000 }),
     February: z.number().openapi({ example: 1500 }),
     March: z.number().openapi({ example: 2000 }),
@@ -71,7 +71,7 @@ registry.registerPath({
   method: 'get',
   tags: ['Vendor'],
   path: 'api/vendor/{vendorId}/dashboard',
-  summary: 'Get Vendor dashboard data 🔒',
+  summary: 'Get Vendor Dashboard Data 🔒',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -173,29 +173,26 @@ export default defineEventHandler(async (event) => {
     return date.getFullYear() === Number(yaer);
   });
 
-  const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+  const monthPrice = [
+    { month: 'Jan', totalPrice: 0 },
+    { month: 'Feb', totalPrice: 0 },
+    { month: 'Mar', totalPrice: 0 },
+    { month: 'Apr', totalPrice: 0 },
+    { month: 'May', totalPrice: 0 },
+    { month: 'Jun', totalPrice: 0 },
+    { month: 'Jul', totalPrice: 0 },
+    { month: 'Aug', totalPrice: 0 },
+    { month: 'Sep', totalPrice: 0 },
+    { month: 'Oct', totalPrice: 0 },
+    { month: 'Nov', totalPrice: 0 },
+    { month: 'Dec', totalPrice: 0 },
   ];
-
-  const pricePerMonth = Object.fromEntries(
-    monthNames.map((month) => [month, 0]),
-  );
 
   finishedOrders.forEach((order) => {
     const monthIndex = order.updatedAt.getMonth();
-    const key = monthNames[monthIndex];
-    pricePerMonth[key] += order.price;
+    if (monthPrice[monthIndex]) {
+      monthPrice[monthIndex].totalPrice += order.price;
+    }
   });
-  return { previewOrders, month_price: pricePerMonth };
+  return { previewOrders, monthPrice: monthPrice };
 });
