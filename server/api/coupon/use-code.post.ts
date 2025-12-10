@@ -75,6 +75,22 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    409: {
+      description: 'Coupon Already Used',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
   },
 });
 
@@ -114,9 +130,10 @@ export default defineEventHandler(async (event) => {
       message: 'Coupon code does not exist',
     });
   }
+
   if (specifed_coupon.userId !== null) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'This coupon has alerady been used',
     });
   }
