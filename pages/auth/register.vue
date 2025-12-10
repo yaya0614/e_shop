@@ -93,7 +93,7 @@
       </button>
 
       <NuxtLink
-        to="/login"
+        to="./login"
         class="block text-center text-sm text-blue-600 hover:text-blue-800 pt-2"
       >
         已經有帳號？前往登入
