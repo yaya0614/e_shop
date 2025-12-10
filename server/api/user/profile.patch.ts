@@ -1,9 +1,15 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { prisma } from '~/lib/prisma';
-import { getUserFromEvent } from '~/server/utils/jwt';
 
 export default defineEventHandler(async (event) => {
-  const userPayload = getUserFromEvent(event);
+  const auth = event.context.auth;
+
+  if (!auth || !auth.authenticated || !auth.userId) {
+    throw createError({
+      statusCode: auth?.error?.code || 401,
+      message: auth?.error?.message || '未授權 (Unauthorized)',
+    });
+  }
 
   const body = await readBody(event);
 
@@ -19,7 +25,7 @@ export default defineEventHandler(async (event) => {
   try {
     const updatedUser = await prisma.user.update({
       where: {
-        id: userPayload.userId,
+        id: auth.userId,
       },
       data: updateData,
       select: {

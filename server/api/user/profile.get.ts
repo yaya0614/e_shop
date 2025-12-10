@@ -1,12 +1,20 @@
 import { defineEventHandler, createError } from 'h3';
 import { prisma } from '~/lib/prisma';
-import { getUserFromEvent } from '~/server/utils/jwt';
 
 export default defineEventHandler(async (event) => {
-  const userPayload = getUserFromEvent(event);
+  const auth = event.context.auth;
+
+  if (!auth || !auth.authenticated || !auth.userId) {
+    throw createError({
+      statusCode: auth?.error?.code || 401,
+      message: auth?.error?.message || '未授權 (Unauthorized)',
+    });
+  }
 
   const user = await prisma.user.findUnique({
-    where: { id: userPayload.userId },
+    where: {
+      id: auth.userId,
+    },
     select: {
       id: true,
       name: true,
