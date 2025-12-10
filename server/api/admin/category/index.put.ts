@@ -5,8 +5,8 @@ import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 const Schema = z.object({
-  originCategoryNameId: z.uuid().openapi({
-    description: 'Origin Category Name',
+  originCategoryId: z.uuid().openapi({
+    description: 'Origin Category Id',
     example: '103ece51-6a66-4622-9c82-1bcba0ae28ad',
   }),
   categoryName: z.string().min(2).max(8).openapi({
@@ -84,16 +84,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { originCategoryNameId, categoryName } = payload.data;
+  const { originCategoryId, categoryName } = payload.data;
   const targetReplaceId = await prisma.category.findUnique({
     where: {
-      id: originCategoryNameId,
+      id: originCategoryId,
     },
   });
   if (!targetReplaceId) {
     throw createError({
-      statusCode: 400,
-      message: 'Origin Category Name Not Found',
+      statusCode: 404,
+      message: 'Origin Category Id Not Found',
     });
   }
 
@@ -104,14 +104,14 @@ export default defineEventHandler(async (event) => {
   });
   if (exitsCtegoryName) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'Category Name Already Exists',
     });
   }
 
   await prisma.category.update({
     where: {
-      id: originCategoryNameId,
+      id: originCategoryId,
     },
     data: {
       name: categoryName,

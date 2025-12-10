@@ -6,7 +6,7 @@ import type { AuthContextPayload } from '~/types/auth';
 extendZodWithOpenApi(z);
 const Schema = z.object({
   originsubCategoryId: z.uuid().openapi({
-    description: 'Origin SubCategory Name Id',
+    description: 'Origin SubCategory Id',
     example: '98def785-f10f-4814-bb8e-15460e3bf951',
   }),
   subCategoryName: z.string().min(2).max(8).openapi({
@@ -93,8 +93,8 @@ export default defineEventHandler(async (event) => {
 
   if (!targetReplaceId) {
     throw createError({
-      statusCode: 400,
-      message: 'Origin SubCategory Name Not Found',
+      statusCode: 404,
+      message: 'Origin SubCategory Id Not Found',
     });
   }
 
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
   });
   if (exitsSubCtegoryName) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'SubCategory Name Already Exists',
     });
   }
