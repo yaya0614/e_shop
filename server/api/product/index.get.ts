@@ -48,6 +48,20 @@ const responsesSchema = z.array(
       description: 'Product Image Id',
       example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567007',
     }),
+    subCategory: z.object({
+      name: z.string().openapi({
+        description: 'Sub Category Name',
+        example: '心靈成長',
+      }),
+    }),
+    discountPrice: z.number().openapi({
+      description: 'Product Discount Price',
+      example: 300,
+    }),
+    quantity: z.number().openapi({
+      description: 'Product Quantity',
+      example: 100,
+    }),
   }),
 );
 
@@ -159,13 +173,8 @@ export default defineEventHandler(async (event) => {
 
   const products = await prisma.product.findMany({
     where: findCondition,
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      price: true,
-      coverId: true,
-      updatedAt: true,
+    include: {
+      subCategory: true,
     },
     skip: (page - 1) * limit,
     take: limit,
