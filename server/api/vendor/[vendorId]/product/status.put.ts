@@ -24,12 +24,6 @@ const schemaResponses = z.object({
   }),
 });
 
-const schemaError = z.object({
-  statusCode: z.number().int().openapi({
-    example: 400,
-  }),
-});
-
 registry.registerPath({
   method: 'put',
   path: 'api/vendor/{vendorId}/product/status',
@@ -59,11 +53,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: schemaError,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    403: {
+      description: 'Forbidden',
+    },
+    404: {
+      description: 'Not Found',
     },
   },
 });
@@ -118,7 +116,7 @@ export default defineEventHandler(async (event) => {
   if (!VendorProducts) {
     throw createError({
       statusCode: 404,
-      message: 'Not Found Vendor Products',
+      message: 'Vendor Products Not Found',
     });
   }
 
@@ -132,7 +130,7 @@ export default defineEventHandler(async (event) => {
   if (!product) {
     throw createError({
       statusCode: 404,
-      message: 'Product not found',
+      message: 'Product Not Found',
     });
   }
 

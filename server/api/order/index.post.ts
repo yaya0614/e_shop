@@ -39,13 +39,6 @@ const responseSchema = z
   })
   .openapi('CreateOrderResponse');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: 'Invalid userId' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'post',
   path: '/api/order',
@@ -72,19 +65,18 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     401: {
-      description: 'Unauthorized - Invalid or missing token',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+      description: 'Unauthorized',
+    },
+    404: {
+      description: 'Not found',
+    },
+    409: {
+      description: 'Conflict - Insufficient product quantity',
+    },
+    422: {
+      description: 'Unprocessable Entity',
     },
   },
 });

@@ -42,13 +42,6 @@ const responsesSchema = z
   })
   .openapi('CouponDetailResponses');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: 'Not Found userId' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'get',
   path: '/api/coupon',
@@ -66,11 +59,9 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized ',
     },
   },
 });

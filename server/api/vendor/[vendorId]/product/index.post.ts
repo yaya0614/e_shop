@@ -37,14 +37,6 @@ const schemaResponses = z.object({
   }),
 });
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({
-      example: 400,
-    }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'post',
   path: 'api/vendor/{vendorId}/product/',
@@ -74,11 +66,12 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    403: {
+      description: 'Forbidden',
     },
   },
 });
@@ -108,7 +101,7 @@ export default defineEventHandler(async (event) => {
   if (!payload.success) {
     throw createError({
       statusCode: 400,
-      message: payload.error.message,
+      message: 'Bad Request',
     });
   }
 

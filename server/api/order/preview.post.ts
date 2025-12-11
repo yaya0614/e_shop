@@ -35,15 +35,6 @@ const ResponseSchame = z.object({
   }),
 });
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 400 }),
-    message: z
-      .string()
-      .openapi({ example: 'Invalidate ProductId Or CouponId' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'post',
   path: '/api/order/preview/',
@@ -71,11 +62,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    404: {
+      description: 'Not Found',
+    },
+    422: {
+      description: 'Unprocessable Entity',
     },
   },
 });
@@ -151,7 +146,7 @@ export default defineEventHandler(async (event) => {
     if (!existsCoupon.used) {
       if (existsCoupon.minPrice && currenPrice < existsCoupon.minPrice) {
         throw createError({
-          statusCode: 400,
+          statusCode: 422,
           message: 'Coupon cannot be applied',
         });
       }

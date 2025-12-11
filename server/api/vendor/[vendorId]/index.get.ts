@@ -30,13 +30,6 @@ const responseSchema = z
   })
   .openapi('GetVendorResponse');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 401 }),
-    message: z.string().openapi({ example: 'Unauthorized' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'get',
   tags: ['Vendor'],
@@ -60,13 +53,17 @@ registry.registerPath({
         },
       },
     },
+    400: {
+      description: 'Bad request',
+    },
     401: {
       description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    403: {
+      description: 'Forbidden',
+    },
+    404: {
+      description: 'Not Found',
     },
   },
 });

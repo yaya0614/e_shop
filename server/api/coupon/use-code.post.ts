@@ -21,26 +21,6 @@ const ResponseSchame = z.object({
     example: 'success',
   }),
 });
-const errorSchema = z
-  .object({
-    errorCode: z
-      .enum([
-        'COUPON_NOT_FOUND',
-        'COUPON_EXPIRED',
-        'COUPON_ALREADY_USED',
-        'MIN_PRICE_NOT_REACHED',
-        'INVALID_COUPON_FORMAT',
-      ])
-      .openapi({
-        description: 'Application-specific error code',
-        example: 'COUPON_NOT_FOUND',
-      }),
-    message: z.string().openapi({
-      description: 'Human-readable error message',
-      example: 'Coupon code does not exist',
-    }),
-  })
-  .openapi('CouponErrorResponse');
 
 registry.registerPath({
   method: 'post',
@@ -69,27 +49,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     401: {
       description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    404: {
+      description: 'Not Found',
     },
     409: {
-      description: 'Coupon Already Used',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+      description: 'Conflict - Coupon Already Used',
     },
   },
 });

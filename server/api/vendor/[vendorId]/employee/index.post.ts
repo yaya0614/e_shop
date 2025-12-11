@@ -24,11 +24,6 @@ const responseSchema = z.object({
   }),
 });
 
-const errorSchema = z.object({
-  statusCode: z.number().openapi({ example: 400 }),
-  message: z.string().openapi({ example: 'Invalid userId' }),
-});
-
 registry.registerPath({
   method: 'post',
   tags: ['Vendor'],
@@ -58,35 +53,18 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     401: {
       description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     403: {
       description: 'Forbidden',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    404: {
+      description: 'Not Found',
     },
     409: {
       description: 'Already exists',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
   },
 });

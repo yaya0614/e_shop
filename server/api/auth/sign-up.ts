@@ -38,13 +38,6 @@ const responseSchema = z
   })
   .openapi('SignUpResponse');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: 'User already exists' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'post',
   path: '/api/auth/sign-up',
@@ -71,19 +64,12 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     409: {
       description: 'User already exists',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    500: {
+      description: 'Internal server error',
     },
   },
 });

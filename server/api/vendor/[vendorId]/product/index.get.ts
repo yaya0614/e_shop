@@ -33,11 +33,6 @@ const schemaResponses = z.object({
     .openapi('ProductsResponse'),
 });
 
-const errorSchema = z.object({
-  statusCode: z.number().openapi({ example: 400 }),
-  message: z.string().openapi({ example: 'Invalid vendor ID' }),
-});
-
 registry.registerPath({
   method: 'get',
   path: 'api/vendor/{vendorId}/product',
@@ -60,35 +55,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     401: {
       description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     403: {
       description: 'Forbidden',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     404: {
-      description: 'Products not found',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+      description: 'Not Found',
     },
   },
 });

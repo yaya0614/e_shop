@@ -41,14 +41,6 @@ const schemaResponses = z.object({
   }),
 });
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({
-      example: 400,
-    }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'put',
   path: 'api/vendor/{vendorId}/product/{productId}',
@@ -79,11 +71,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    403: {
+      description: 'Forbidden',
+    },
+    404: {
+      description: 'Not Found',
     },
   },
 });
@@ -113,7 +109,7 @@ export default defineEventHandler(async (event) => {
   if (!productId) {
     throw createError({
       statusCode: 400,
-      message: 'Product ID is required',
+      message: 'Product not found',
     });
   }
 

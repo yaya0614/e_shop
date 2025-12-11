@@ -65,12 +65,6 @@ const responsesSchema = z.array(
   }),
 );
 
-const errorSchema = z.object({
-  statusCode: z.number().openapi({
-    example: 400,
-  }),
-});
-
 registry.registerPath({
   method: 'get',
   path: 'api/product',
@@ -91,11 +85,9 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
     },
   },
 });
@@ -133,15 +125,15 @@ export default defineEventHandler(async (event) => {
           { name: { contains: keyword } },
           { description: { contains: keyword } },
           {
-            subCategory: {
-              is: {
+            subCategorys: {
+              some: {
                 name: { contains: keyword },
               },
             },
           },
           {
-            subCategory: {
-              is: {
+            subCategorys: {
+              some: {
                 category: {
                   is: {
                     name: { contains: keyword },
@@ -174,7 +166,7 @@ export default defineEventHandler(async (event) => {
   const products = await prisma.product.findMany({
     where: findCondition,
     include: {
-      subCategory: true,
+      subCategorys: true,
     },
     skip: (page - 1) * limit,
     take: limit,

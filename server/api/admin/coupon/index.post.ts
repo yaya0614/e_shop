@@ -63,17 +63,6 @@ const ResponseSchema = z
   })
   .openapi('CreateCouponResponse');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({
-      example: 400,
-    }),
-    message: z.string().openapi({
-      example: 'Invalid Form',
-    }),
-  })
-  .openapi('CreateCouponErrorResponses');
-
 registry.registerPath({
   method: 'post',
   path: 'api/admin/coupon',
@@ -101,11 +90,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    403: {
+      description: 'Forbidden - Not Admin Cannot Create Coupon',
+    },
+    409: {
+      description: 'Conflict - The code is already exist',
     },
   },
 });
@@ -148,7 +141,7 @@ export default defineEventHandler(async (event) => {
   });
   if (exist_code) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'The code is already exist',
     });
   }

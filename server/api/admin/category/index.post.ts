@@ -15,12 +15,6 @@ const responsesSchema = z.object({
   statusMessge: z.literal('success').openapi({ example: 'success' }),
 });
 
-const errorSchema = z.object({
-  statusCode: z.number().openapi({
-    example: 400,
-  }),
-});
-
 registry.registerPath({
   method: 'post',
   path: 'api/admin/category',
@@ -47,11 +41,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Unauthorized',
+    },
+    403: {
+      description: 'Forbidden',
+    },
+    409: {
+      description: 'Conflict - Category Name Already Exists',
     },
   },
 });
@@ -76,7 +74,7 @@ export default defineEventHandler(async (event) => {
   if (!payload.success) {
     throw createError({
       statusCode: 400,
-      message: 'Invalid request body',
+      message: 'Bad Request',
     });
   }
 
@@ -86,7 +84,7 @@ export default defineEventHandler(async (event) => {
   });
   if (exitsCtegoryName) {
     throw createError({
-      statusCode: 400,
+      statusCode: 409,
       message: 'Category Name Already Exists',
     });
   }

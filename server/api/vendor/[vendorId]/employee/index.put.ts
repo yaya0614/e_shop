@@ -17,11 +17,6 @@ const schema = z.object({
   }),
 });
 
-const errorSchema = z.object({
-  statusCode: z.number().openapi({ example: 400 }),
-  message: z.string().openapi({ example: 'Invalid employee ID' }),
-});
-
 registry.registerPath({
   method: 'put',
   tags: ['Vendor'],
@@ -46,27 +41,15 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     401: {
       description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
     },
     403: {
       description: 'Forbidden',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    404: {
+      description: 'Employee not found',
     },
   },
 });

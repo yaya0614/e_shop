@@ -31,13 +31,6 @@ const responseSchema = z
   })
   .openapi('SignInResponse');
 
-const errorSchema = z
-  .object({
-    statusCode: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: 'Invalid email or password' }),
-  })
-  .openapi('ErrorResponse');
-
 registry.registerPath({
   method: 'post',
   path: '/api/auth/sign-in',
@@ -64,11 +57,9 @@ registry.registerPath({
     },
     400: {
       description: 'Bad request',
-      content: {
-        'application/json': {
-          schema: errorSchema,
-        },
-      },
+    },
+    401: {
+      description: 'Invalid email or password',
     },
   },
 });
