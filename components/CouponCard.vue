@@ -16,7 +16,7 @@
         <span v-if="coupon.type === 'DISCOUNT'">
           NT$ {{ coupon.discountPrice }} 元折扣
         </span>
-        <span v-else-if="coupon.type === 'PERCENTAGE'">
+        <span v-else-if="coupon.type === 'COUPON'">
           {{ coupon.couponPercentage }}% 折扣
           <span v-if="coupon.maxPrice">
             (最高折 NT$ {{ coupon.maxPrice }})</span
@@ -57,7 +57,7 @@ interface Props {
   coupon: UserCoupon;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const handleCopy = (code: string) => {
   // 實際複製邏輯，這裡僅為模擬
