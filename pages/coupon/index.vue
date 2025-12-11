@@ -56,9 +56,10 @@ import { toast } from 'vue-sonner';
 const coupons = ref<UserCoupon[]>([]);
 const loading = ref(true);
 //const error = ref<string | null>(null);
-const mapFetchErrorToUserMessage = (
-  e: any,
-): { title: string; description: string } => {
+const mapFetchErrorToUserMessage = (e: {
+  statusCode?: number;
+  message?: string;
+}): { title: string; description: string } => {
   let title = '載入失敗';
   let description = '無法連線到伺服器，請檢查您的網路。';
 
