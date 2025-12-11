@@ -1,9 +1,16 @@
+enum VendorStatus {
+  Pending
+  ACTIVE
+  INACTIVE
+}
+
 model Vendor {
-  id      String @id @default(uuid())
+  id      String       @id @default(uuid())
   name    String
   phone   String
-  email   String @unique
+  email   String       @unique
   address String
+  status  VendorStatus @default(Pending)
 
   products  Product[]
   employees Employee[]
