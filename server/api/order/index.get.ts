@@ -22,14 +22,6 @@ const OrderProductItemSchema = z
           description: 'Cover image ID of the product',
           example: 'img_123456',
         }),
-        vendor: z
-          .object({
-            name: z.string().openapi({
-              description: 'Vendor name',
-              example: 'NTUT Store',
-            }),
-          })
-          .openapi('OrderHistoryVendor'),
       })
       .openapi('OrderHistoryProduct'),
   })
@@ -53,9 +45,25 @@ const OrderHistoryItemSchema = z
       description: 'Order creation datetime',
       example: '2025-11-29T08:30:00.000Z',
     }),
+    updatedAt: z.string().datetime().openapi({
+      description: 'Order last update datetime',
+      example: '2025-11-30T10:15:00.000Z',
+    }),
     products: z.array(OrderProductItemSchema).openapi({
       description: 'Products in this order',
     }),
+    vendor: z
+      .object({
+        id: z.string().openapi({
+          description: 'Vendor ID',
+          example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+        }),
+        name: z.string().openapi({
+          description: 'Vendor name',
+          example: 'TechStore',
+        }),
+      })
+      .openapi('OrderHistoryVendor'),
   })
   .openapi('OrderHistoryItem');
 
@@ -113,17 +121,19 @@ export default defineEventHandler(async (event) => {
 
   const userId = auth.userId;
 
-  const orderhistory = await prisma.user.findFirst({
+  const orderhistory = await prisma.user.findUnique({
     where: {
       id: userId,
     },
     select: {
       orders: {
-        select: {
-          id: true,
-          price: true,
-          status: true,
-          createdAt: true,
+        include: {
+          vendor: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           products: {
             select: {
               quantity: true,
@@ -131,11 +141,6 @@ export default defineEventHandler(async (event) => {
                 select: {
                   name: true,
                   coverId: true,
-                  vendor: {
-                    select: {
-                      name: true,
-                    },
-                  },
                 },
               },
             },
@@ -148,9 +153,28 @@ export default defineEventHandler(async (event) => {
   if (!orderhistory) {
     throw createError({
       statusCode: 404,
-      message: 'Not Found OrderDetail',
+      message: 'User not found',
     });
   }
-
-  return orderhistory;
+  return {
+    orders: orderhistory.orders.map((order) => ({
+      id: order.id,
+      price: order.price,
+      status: order.status,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      couponId: order.couponId,
+      vendor: {
+        id: order.vendor?.id,
+        name: order.vendor?.name,
+      },
+      products: order.products.map((p) => ({
+        quantity: p.quantity,
+        product: {
+          name: p.product.name,
+          coverId: p.product.coverId,
+        },
+      })),
+    })),
+  };
 });
