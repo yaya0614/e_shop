@@ -19,10 +19,15 @@ const responseSchema = z
       description: 'Order ID',
       example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
     }),
-
-    vendorName: z.string().openapi({
-      description: 'Name of the vendor',
-      example: 'Sunrise Foods',
+    vendor: z.object({
+      id: z.string().openapi({
+        description: 'Vendor ID',
+        example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+      }),
+      name: z.string().openapi({
+        description: 'Vendor name',
+        example: 'TechStore',
+      }),
     }),
     products: z
       .array(
