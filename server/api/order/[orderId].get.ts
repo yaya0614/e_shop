@@ -9,7 +9,7 @@ extendZodWithOpenApi(z);
 const schema = z.object({
   orderId: z.string().openapi({
     description: 'ID of order',
-    example: 'b77b32dd-d837-9cd66-93e4-45378916a3dc',
+    example: 'e2eb2770-729d-4adf-8d17-ebe9a2b6bc44',
   }),
 });
 
@@ -19,7 +19,16 @@ const responseSchema = z
       description: 'Order ID',
       example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
     }),
-
+    vendor: z.object({
+      id: z.string().openapi({
+        description: 'Vendor ID',
+        example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+      }),
+      name: z.string().openapi({
+        description: 'Vendor name',
+        example: 'TechStore',
+      }),
+    }),
     products: z
       .array(
         z.object({
@@ -126,6 +135,11 @@ export default defineEventHandler(async (event) => {
       userId,
     },
     include: {
+      vendor: {
+        select: {
+          name: true,
+        },
+      },
       products: {
         select: {
           quantity: true,
@@ -150,5 +164,18 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return orderdetail;
+  return {
+    id: orderdetail.id,
+    price: orderdetail.price,
+    status: orderdetail.status,
+    createdAt: orderdetail.createdAt,
+    updatedAt: orderdetail.updatedAt,
+    userId: orderdetail.userId,
+    couponId: orderdetail.couponId,
+    vendor: {
+      id: orderdetail.vendorId,
+      name: orderdetail.vendor.name,
+    },
+    products: orderdetail.products,
+  };
 });
