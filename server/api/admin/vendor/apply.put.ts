@@ -105,15 +105,8 @@ export default defineEventHandler(async (event) => {
   if (!vendor) {
     throw createError({ statusCode: 404, message: 'Vendor not found' });
   }
-  const matchApplyer = vendor.employees.find((emp) => emp.userId === userId);
-  if (!matchApplyer) {
-    throw createError({
-      statusCode: 404,
-      message: 'Not the applying user for this vendor',
-    });
-  }
 
-  if (vendor.status !== VendorStatus.Pending) {
+  if (vendor.status !== VendorStatus.PENDING) {
     throw createError({
       statusCode: 409,
       message: 'Vendor apply is not in pending state',
