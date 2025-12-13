@@ -1,12 +1,12 @@
-// --- 訂單列表 (來自 index.get.ts) ---
 export interface OrderHistoryVendor {
+  id: string; // ✨ 新增 Vendor ID
   name: string; // 供應商名稱
 }
 
 export interface OrderHistoryProduct {
   name: string;
   coverId: string | null;
-  vendor: OrderHistoryVendor;
+  // ✨ 移除 vendor: OrderHistoryVendor;
 }
 
 export interface OrderHistoryProductItem {
@@ -19,6 +19,8 @@ export interface OrderHistoryItem {
   price: number; // 訂單總價
   status: string; // 訂單狀態 (e.g., 'RECEIVED')
   createdAt: string; // 創建時間 (ISO 8601)
+  updatedAt: string; // ✨ 新增：更新時間
+  vendor: OrderHistoryVendor; // ✨ 變動：Vendor 移到訂單層級
   products: OrderHistoryProductItem[]; // 產品概覽列表
 }
 
@@ -28,6 +30,11 @@ export interface GetOrderHistoryResponse {
 }
 
 // --- 訂單詳情 (來自 [orderId].get.ts) ---
+
+export interface OrderDetailVendor {
+  id: string;
+  name: string;
+}
 
 export interface OrderDetailProduct {
   id: string;
@@ -42,9 +49,15 @@ export interface OrderDetailProductItem {
   product: OrderDetailProduct;
 }
 
-// 注意: [orderId].get.ts 的返回結構就是 OrderDetail 的資料
+// ✨ 變動：OrderDetailResponse 現在包含完整的訂單資訊
 export interface OrderDetailResponse {
   id: string;
+  price: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  couponId: string | null; // 根據後端回傳判斷是否為 null
+  vendor: OrderDetailVendor;
   products: OrderDetailProductItem[];
-  // 註：後端回傳 Order 整個物件，可能還包含 status, price 等欄位，但我們主要關注 products 詳情。
 }

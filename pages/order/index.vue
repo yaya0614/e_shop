@@ -3,12 +3,9 @@ import { ref, onMounted } from 'vue';
 import type { GetOrderHistoryResponse, OrderHistoryItem } from '~/types/order';
 import { FetchError } from 'ofetch';
 import { toast } from 'vue-sonner';
-import { useRouter } from 'vue-router'; // 引入 useRouter
+import { useRouter } from 'vue-router';
 
-// 建立 router 實例，用於導航，與 login.vue 一致
 const router = useRouter();
-
-// 假設 API 的基礎路徑是 /api/order
 const orders = ref<OrderHistoryItem[]>([]);
 const isLoading = ref(true);
 
@@ -19,7 +16,6 @@ const fetchOrderHistory = async () => {
       method: 'GET',
       credentials: 'include',
     });
-
     orders.value = data.orders || [];
   } catch (err) {
     if (err instanceof FetchError) {
@@ -107,6 +103,8 @@ const formatDate = (dateString: string) => {
         <p class="text-gray-600 mb-2">
           訂單日期: {{ formatDate(order.createdAt) }}
         </p>
+        <p class="text-gray-600 mb-2">供應商: **{{ order.vendor.name }}**</p>
+
         <p class="text-lg font-bold text-indigo-600 mb-4">
           總金額: ${{ order.price.toLocaleString() }}
         </p>
@@ -118,8 +116,7 @@ const formatDate = (dateString: string) => {
               v-for="(item, index) in order.products.slice(0, 2)"
               :key="index"
             >
-              {{ item.product.name }} (x{{ item.quantity }}) -
-              {{ item.product.vendor.name }}
+              {{ item.product.name }} (x{{ item.quantity }})
             </li>
             <li v-if="order.products.length > 2">
               ... 還有 {{ order.products.length - 2 }} 件商品

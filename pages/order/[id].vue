@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import type { OrderDetailResponse, OrderHistoryItem } from '~/types/order';
+import type { OrderDetailResponse } from '~/types/order';
 import { FetchError } from 'ofetch';
-import { toast } from 'vue-sonner'; // 引入 toast
+import { toast } from 'vue-sonner';
 
 const route = useRoute();
 const orderId = route.params.id as string;
 
-const orderDetail = ref<
-  (OrderDetailResponse & Partial<OrderHistoryItem>) | null
->(null);
+const orderDetail = ref<OrderDetailResponse | null>(null);
 const isLoading = ref(true);
 
 const fetchOrderDetail = async () => {
@@ -31,7 +29,6 @@ const fetchOrderDetail = async () => {
 
     orderDetail.value = data;
   } catch (err) {
-    // 使用 toast.error 顯示錯誤訊息
     if (err instanceof FetchError) {
       if (err.statusCode === 401) {
         toast.error('未授權', {
@@ -59,6 +56,14 @@ const fetchOrderDetail = async () => {
 onMounted(() => {
   fetchOrderDetail();
 });
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('zh-TW', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
 </script>
 
 <template>
@@ -66,8 +71,9 @@ onMounted(() => {
     <NuxtLink
       to="/order"
       class="text-blue-500 hover:underline mb-4 block"
-      >← 返回訂單列表</NuxtLink
     >
+      ← 返回訂單列表
+    </NuxtLink>
 
     <h1 class="text-3xl font-bold mb-6">訂單詳情</h1>
 
@@ -82,18 +88,29 @@ onMounted(() => {
       v-else-if="orderDetail"
       class="bg-white shadow-xl rounded-lg p-8"
     >
-      <div class="mb-6 border-b pb-4">
+      <div class="mb-6 border-b pb-4 space-y-2">
         <p class="text-gray-700">**訂單 ID:** {{ orderDetail.id }}</p>
+        <p class="text-gray-700">**供應商:** {{ orderDetail.vendor.name }}</p>
         <p class="text-gray-700">
-          **狀態:**
-          <span class="font-bold text-green-600">{{
-            orderDetail.status || 'N/A'
-          }}</span>
+          **下單時間:** {{ formatDate(orderDetail.createdAt) }}
         </p>
         <p class="text-gray-700">
+          **最後更新:** {{ formatDate(orderDetail.updatedAt) }}
+        </p>
+        <p
+          v-if="orderDetail.couponId"
+          class="text-gray-700"
+        >
+          **使用優惠券 ID:** {{ orderDetail.couponId }}
+        </p>
+        <p class="text-gray-700">
+          **狀態:**
+          <span class="font-bold text-green-600">{{ orderDetail.status }}</span>
+        </p>
+        <p class="text-gray-700 pt-2">
           **總金額:**
           <span class="text-xl font-bold text-red-600"
-            >${{ orderDetail.price || 'N/A' }}</span
+            >${{ orderDetail.price.toLocaleString() }}</span
           >
         </p>
       </div>
@@ -139,7 +156,7 @@ onMounted(() => {
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              ${{ item.product.price }}
+              ${{ item.product.price.toLocaleString() }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {{ item.quantity }}
@@ -147,7 +164,7 @@ onMounted(() => {
             <td
               class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
             >
-              ${{ item.product.price * item.quantity }}
+              ${{ (item.product.price * item.quantity).toLocaleString() }}
             </td>
           </tr>
         </tbody>
