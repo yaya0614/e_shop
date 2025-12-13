@@ -1,5 +1,5 @@
 enum VendorStatus {
-  Pending
+  PENDING
   ACTIVE
   INACTIVE
 }
@@ -10,7 +10,7 @@ model Vendor {
   phone   String
   email   String       @unique
   address String
-  status  VendorStatus @default(Pending)
+  status  VendorStatus @default(PENDING)
 
   products  Product[]
   employees Employee[]
