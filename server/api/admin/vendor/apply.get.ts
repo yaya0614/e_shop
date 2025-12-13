@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
   const vendorRequests = await prisma.vendor.findMany({
     where: {
-      status: VendorStatus.Pending,
+      status: VendorStatus.PENDING,
     },
     select: {
       id: true,
