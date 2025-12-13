@@ -17,7 +17,11 @@ const schema = z
       description: 'List of order products',
       example: [
         {
-          productId: 'b332ab67-2b11-4a88-87ef-c53a88d9dd11',
+          productId: '7023a6bf-6cd6-4bec-8de0-9a97d7b56002',
+          quantity: 2,
+        },
+        {
+          productId: '91f2a3cb-6e3b-45ad-8af1-8d23c5bbf912',
           quantity: 2,
         },
       ],
@@ -76,7 +80,7 @@ registry.registerPath({
       description: 'Conflict - Insufficient product quantity',
     },
     422: {
-      description: 'Unprocessable Entity',
+      description: 'Unprocessable Entity - Products from different vendors',
     },
   },
 });
@@ -114,12 +118,28 @@ export default defineEventHandler(async (event) => {
         in: payload.data.products.map((product) => product.productId),
       },
     },
+    select: {
+      id: true,
+      price: true,
+      quantity: true,
+      vendorId: true,
+    },
   });
 
   if (products.length !== payload.data.products.length) {
     throw createError({
       statusCode: 404,
       message: 'some product not found',
+    });
+  }
+  const productVendorAmount = new Set(
+    products.map((product) => product.vendorId),
+  ).size;
+
+  if (productVendorAmount > 1) {
+    throw createError({
+      statusCode: 422,
+      message: 'All products must belong to the same vendor',
     });
   }
 
