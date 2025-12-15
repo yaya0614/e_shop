@@ -89,26 +89,39 @@ const formatDate = (dateString: string) => {
       class="bg-white shadow-xl rounded-lg p-8"
     >
       <div class="mb-6 border-b pb-4 space-y-2">
-        <p class="text-gray-700">**訂單 ID:** {{ orderDetail.id }}</p>
-        <p class="text-gray-700">**供應商:** {{ orderDetail.vendor.name }}</p>
         <p class="text-gray-700">
-          **下單時間:** {{ formatDate(orderDetail.createdAt) }}
+          <span class="font-bold">訂單 ID:</span> {{ orderDetail.id }}
         </p>
+
         <p class="text-gray-700">
-          **最後更新:** {{ formatDate(orderDetail.updatedAt) }}
+          <span class="font-bold">供應商:</span> {{ orderDetail.vendor.name }}
         </p>
+
+        <p class="text-gray-700">
+          <span class="font-bold">下單時間:</span>
+          {{ formatDate(orderDetail.createdAt) }}
+        </p>
+
+        <p class="text-gray-700">
+          <span class="font-bold">最後更新:</span>
+          {{ formatDate(orderDetail.updatedAt) }}
+        </p>
+
         <p
           v-if="orderDetail.couponId"
           class="text-gray-700"
         >
-          **使用優惠券 ID:** {{ orderDetail.couponId }}
+          <span class="font-bold">使用優惠券 ID:</span>
+          {{ orderDetail.couponId }}
         </p>
+
         <p class="text-gray-700">
-          **狀態:**
+          <span class="font-bold">狀態:</span>
           <span class="font-bold text-green-600">{{ orderDetail.status }}</span>
         </p>
+
         <p class="text-gray-700 pt-2">
-          **總金額:**
+          <span class="font-bold">總金額:</span>
           <span class="text-xl font-bold text-red-600"
             >${{ orderDetail.price.toLocaleString() }}</span
           >
