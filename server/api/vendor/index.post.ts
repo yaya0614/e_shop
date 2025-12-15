@@ -36,7 +36,8 @@ registry.registerPath({
   method: 'post',
   path: 'api/vendor',
   tags: ['Vendor'],
-  summary: 'Create Vendor',
+  summary: 'Create Vendor 🔒',
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -60,6 +61,10 @@ registry.registerPath({
     },
     401: {
       description: 'Unauthorized',
+    },
+    409: {
+      description:
+        'Conflict - You already have the maximum number of vendors (5) as an owner',
     },
   },
 });
