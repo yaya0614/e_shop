@@ -5,32 +5,33 @@ import { prisma } from '~/lib/prisma';
 import { VendorStatus } from '~/prisma/generated/enums';
 extendZodWithOpenApi(z);
 
-const responsesSchema = z.array(
-  z.object({
-    id: z.string().openapi({
-      description: 'Vendor Id',
-      example: 'd4e5f6a7-b890-1234-cdef-567890abcedf',
-    }),
-    name: z.string().openapi({
-      description: 'Vendor Name',
-      example: '心靈書坊',
-    }),
-    email: z.string().openapi({
-      description: 'Vendor Email',
-      example: 'BobVendor@gmail.com',
-    }),
-    status: z.enum(VendorStatus).openapi({
-      description: 'Vendor Status',
-      example: 'PENDING',
-    }),
-    owner: z.object({
-      userId: z.string().openapi({
-        description: 'Owner User Id',
-        example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567007',
-      }),
+const vendorSchema = z.object({
+  vendorId: z.string().openapi({
+    description: 'Vendor Id',
+    example: 'd4e5f6a7-b890-1234-cdef-567890abcedf',
+  }),
+  name: z.string().openapi({
+    description: 'Vendor Name',
+    example: '心靈書坊',
+  }),
+  email: z.string().openapi({
+    description: 'Vendor Email',
+    example: 'BobVendor@gmail.com',
+  }),
+  status: z.enum(VendorStatus).openapi({
+    description: 'Vendor Status',
+    example: 'PENDING',
+  }),
+  owner: z.object({
+    userId: z.string().openapi({
+      description: 'Owner User Id',
+      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567007',
     }),
   }),
-);
+});
+const responsesSchema = z.object({
+  vendor: z.array(vendorSchema),
+});
 
 registry.registerPath({
   method: 'get',
@@ -90,5 +91,13 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  return vendorRequests;
+  return {
+    vendor: vendorRequests.map((vendor) => ({
+      vendorId: vendor.id,
+      name: vendor.name,
+      email: vendor.email,
+      status: vendor.status,
+      owner: vendor.employees[0],
+    })),
+  };
 });
