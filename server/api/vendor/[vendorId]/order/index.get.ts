@@ -64,6 +64,13 @@ const responseSchema = z.object({
   }),
 });
 
+const paramsSchema = z.object({
+  vendorId: z.string().openapi({
+    description: 'Vendor ID',
+    example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+  }),
+});
+
 registry.registerPath({
   method: 'get',
   path: '/api/vendor/:vendorId/order',
@@ -71,12 +78,7 @@ registry.registerPath({
   summary: 'Get orders for a vendor 🔒',
   security: [{ bearerAuth: [] }],
   request: {
-    params: z.object({
-      vendorId: z.string().openapi({
-        description: 'Vendor ID',
-        example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
-      }),
-    }),
+    params: paramsSchema,
     query: querySchema,
   },
   responses: {
@@ -112,34 +114,40 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const vendorId = getRouterParam(event, 'vendorId');
-  if (!vendorId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Vendor ID is required',
-    });
-  }
+  const { data: params, success } = await getValidatedRouterParams(
+    event,
+    paramsSchema.safeParse,
+  );
 
-  if (auth.vendor?.id !== vendorId) {
-    throw createError({
-      statusCode: 403,
-      message: 'Forbidden',
-    });
-  }
-
-  const query = getQuery(event);
-  const queryResult = querySchema.safeParse(query);
-
-  if (!queryResult.success) {
+  if (!success) {
     throw createError({
       statusCode: 400,
       message: 'Bad Request',
     });
   }
 
-  const { keyword, page, limit, filter } = queryResult.data;
+  if (auth.vendor?.id !== params.vendorId) {
+    throw createError({
+      statusCode: 403,
+      message: 'Forbidden',
+    });
+  }
+
+  const { data: query, success: queryResult } = await getValidatedQuery(
+    event,
+    querySchema.safeParse,
+  );
+
+  if (!queryResult) {
+    throw createError({
+      statusCode: 400,
+      message: 'Bad Request',
+    });
+  }
+
+  const { keyword, page, limit, filter } = query;
   const findCondition: Prisma.OrderWhereInput = {
-    vendorId: vendorId,
+    vendorId: params.vendorId,
     OR: keyword
       ? [
           {
@@ -200,6 +208,10 @@ export default defineEventHandler(async (event) => {
     },
   });
 
+  const total = await prisma.order.count({
+    where: findCondition,
+  });
+
   return {
     orders: orders.map((order) => ({
       id: order.id,
@@ -208,5 +220,7 @@ export default defineEventHandler(async (event) => {
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     })),
+    totalPages: Math.ceil(total / limit),
+    page: page,
   };
 });

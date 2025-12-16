@@ -80,33 +80,29 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const vendorId = getRouterParam(event, 'vendorId');
-  if (!vendorId) {
+  const { data: params, success } = await getValidatedRouterParams(
+    event,
+    paramsSchema.safeParse,
+  );
+
+  if (!success) {
     throw createError({
       statusCode: 400,
-      message: 'Vendor ID is required',
+      message: 'Bad Request',
     });
   }
 
-  if (auth.vendor?.id !== vendorId) {
+  if (auth.vendor?.id !== params.vendorId) {
     throw createError({
       statusCode: 403,
       message: 'Forbidden',
     });
   }
 
-  const orderId = getRouterParam(event, 'orderId');
-  if (!orderId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Order ID is required',
-    });
-  }
-
   const order = await prisma.order.findUnique({
     where: {
-      id: orderId,
-      vendorId: vendorId,
+      id: params.orderId,
+      vendorId: params.vendorId,
     },
   });
 
@@ -126,7 +122,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await prisma.order.update({
-    where: { id: orderId },
+    where: { id: params.orderId, vendorId: params.vendorId },
     data: { status: payload.data.status },
   });
 

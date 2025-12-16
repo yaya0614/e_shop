@@ -16,70 +16,124 @@ const schema = z.object({
   }),
 });
 
-const responseSchema = z.object({
-  id: z.string().openapi({
-    description: 'Order ID',
-    example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
-  }),
-  price: z.number().openapi({
-    description: 'Price of the order',
-    example: 1999,
-  }),
-  status: z.string().openapi({
-    description: 'Status of the order',
-    example: 'RECEIVED',
-  }),
-  createdAt: z.string().datetime().openapi({
-    description: 'Creation datetime of the order',
-    example: '2025-11-29T08:30:00.000Z',
-  }),
-  updatedAt: z.string().datetime().openapi({
-    description: 'Last update datetime of the order',
-    example: '2025-11-30T10:15:00.000Z',
-  }),
-  products: z
-    .array(
-      z.object({
+const responseSchema = z
+  .object({
+    id: z.string().openapi({
+      description: 'Order ID',
+      example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+    }),
+    price: z.number().openapi({
+      description: 'Price of the order',
+      example: 1999,
+    }),
+    status: z.string().openapi({
+      description: 'Status of the order',
+      example: 'RECEIVED',
+    }),
+    createdAt: z.string().datetime().openapi({
+      description: 'Creation datetime of the order',
+      example: '2025-11-29T08:30:00.000Z',
+    }),
+    updatedAt: z.string().datetime().openapi({
+      description: 'Last update datetime of the order',
+      example: '2025-11-30T10:15:00.000Z',
+    }),
+    products: z
+      .array(
+        z.object({
+          id: z.string().openapi({
+            description: 'Product ID',
+            example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+          }),
+          name: z.string().openapi({
+            description: 'Product name',
+            example: 'Mechanical Keyboard',
+          }),
+          description: z.string().openapi({
+            description: 'Product description',
+            example: 'A mechanical keyboard with a unique design',
+          }),
+          price: z.number().openapi({
+            description: 'Price of the product',
+            example: 1999,
+          }),
+          coverId: z.string().openapi({
+            description: 'Cover image ID of the product',
+            example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+          }),
+        }),
+      )
+      .openapi({
+        description: 'Products in the order',
+      }),
+    vendor: z
+      .object({
         id: z.string().openapi({
-          description: 'Product ID',
+          description: 'Vendor ID',
           example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
         }),
         name: z.string().openapi({
-          description: 'Product name',
-          example: 'Mechanical Keyboard',
+          description: 'Vendor name',
+          example: 'TechStore',
         }),
-        description: z.string().openapi({
-          description: 'Product description',
-          example: 'A mechanical keyboard with a unique design',
-        }),
-        price: z.number().openapi({
-          description: 'Price of the product',
-          example: 1999,
-        }),
-        coverId: z.string().openapi({
-          description: 'Cover image ID of the product',
+      })
+      .openapi({
+        description: 'Vendor of the order',
+      }),
+    user: z
+      .object({
+        id: z.string().openapi({
+          description: 'User ID',
           example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
         }),
+        name: z.string().openapi({
+          description: 'User name',
+          example: 'John Doe',
+        }),
+        email: z.string().openapi({
+          description: 'User email',
+          example: 'john.doe@example.com',
+        }),
+        address: z.string().openapi({
+          description: 'User address',
+          example: '123 Main St, Anytown, USA',
+        }),
+      })
+      .openapi({
+        description: 'User of the order',
       }),
-    )
-    .openapi({
-      description: 'Products in the order',
-    }),
-  vendor: z
-    .object({
-      id: z.string().openapi({
-        description: 'Vendor ID',
-        example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+    coupon: z
+      .object({
+        id: z.string().openapi({
+          description: 'Coupon ID',
+          example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
+        }),
+        code: z.string().openapi({
+          description: 'Coupon code',
+          example: '10OFF',
+        }),
+        discountPrice: z.number().openapi({
+          description: 'Discount price of the coupon',
+          example: 100,
+        }),
+        couponPercentage: z.number().openapi({
+          description: 'Coupon percentage of the coupon',
+          example: 10,
+        }),
+        maxPrice: z.number().openapi({
+          description: 'Max price of the coupon',
+          example: 1000,
+        }),
+        minPrice: z.number().openapi({
+          description: 'Min price of the coupon',
+          example: 100,
+        }),
+      })
+      .openapi({
+        description: 'Coupon of the order',
       }),
-      name: z.string().openapi({
-        description: 'Vendor name',
-        example: 'TechStore',
-      }),
-    })
-    .openapi({
-      description: 'Vendor of the order',
-    }),
-});
+  })
+  .openapi('VendorOrderDetailResponse');
 
 registry.registerPath({
   method: 'get',
@@ -123,34 +177,29 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const vendorId = getRouterParam(event, 'vendorId');
-  if (!vendorId) {
+  const { data: params, success } = await getValidatedRouterParams(
+    event,
+    schema.safeParse,
+  );
+
+  if (!success) {
     throw createError({
       statusCode: 400,
-      message: 'Vendor ID is required',
+      message: 'Bad Request',
     });
   }
 
-  if (auth.vendor?.id !== vendorId) {
+  if (auth.vendor?.id !== params.vendorId) {
     throw createError({
       statusCode: 403,
       message: 'Forbidden',
     });
   }
 
-  const orderId = getRouterParam(event, 'orderId');
-
-  if (!orderId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Order ID is required',
-    });
-  }
-
   const order = await prisma.order.findUnique({
     where: {
-      id: orderId,
-      vendorId: vendorId,
+      id: params.orderId,
+      vendorId: params.vendorId,
     },
     include: {
       vendor: true,
