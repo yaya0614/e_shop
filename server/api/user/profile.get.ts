@@ -1,4 +1,4 @@
-import { defineEventHandler } from 'h3';
+import { defineEventHandler, createError } from 'h3';
 import { prisma } from '~/lib/prisma';
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
@@ -41,8 +41,9 @@ export default defineEventHandler(async (event) => {
   const auth = event.context.auth;
 
   if (!auth || !auth.authenticated || !auth.userId) {
-    throw Object.assign(new Error('未授權 (Unauthorized)'), {
+    throw createError({
       statusCode: 401,
+      message: '未授權 (Unauthorized)',
     });
   }
 
@@ -59,7 +60,10 @@ export default defineEventHandler(async (event) => {
     });
 
     if (!user) {
-      throw Object.assign(new Error('找不到使用者'), { statusCode: 404 });
+      throw createError({
+        statusCode: 404,
+        message: '找不到使用者',
+      });
     }
 
     return { success: true, user };
@@ -71,8 +75,13 @@ export default defineEventHandler(async (event) => {
     };
 
     if (dbError.code === 'P2025') {
-      throw Object.assign(new Error('找不到使用者'), { statusCode: 404 });
+      throw createError({
+        statusCode: 404,
+        message: '找不到使用者',
+      });
     }
+    // eslint-disable-next-line no-console
+    console.error('Get Profile Error:', e);
 
     throw e;
   }
