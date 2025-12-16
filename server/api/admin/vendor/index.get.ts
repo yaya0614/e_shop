@@ -20,7 +20,7 @@ const vendorSchema = z.object({
   }),
   status: z.enum(VendorStatus).openapi({
     description: 'Vendor Status',
-    example: 'PENDING',
+    example: 'ACTIVE',
   }),
   owner: z.object({
     userId: z.string().openapi({
@@ -29,20 +29,21 @@ const vendorSchema = z.object({
     }),
   }),
 });
+
 const responsesSchema = z.object({
   vendor: z.array(vendorSchema),
 });
 
 registry.registerPath({
   method: 'get',
-  path: 'api/admin/vendor/apply',
+  path: 'api/admin/vendor/',
   tags: ['Admin'],
-  summary: 'Get Vendor Apply Request 🔒',
+  summary: 'Get Vendor 🔒',
   security: [{ BearerAuth: [] }],
-  description: 'Get list of vendor apply requests for admin review',
+  description: 'list of exist vendors',
   responses: {
     200: {
-      description: 'Get Vendor Apply Requests Successfully',
+      description: 'Get Exist Vendor Successfully',
       content: {
         'application/json': {
           schema: responsesSchema,
@@ -75,7 +76,8 @@ export default defineEventHandler(async (event) => {
 
   const vendorRequests = await prisma.vendor.findMany({
     where: {
-      status: VendorStatus.PENDING,
+      status: VendorStatus.ACTIVE,
+      isDeleted: false,
     },
     select: {
       id: true,
@@ -92,12 +94,14 @@ export default defineEventHandler(async (event) => {
   });
 
   return {
-    vendor: vendorRequests.map((vendor) => ({
+    vendors: vendorRequests.map((vendor) => ({
       vendorId: vendor.id,
       name: vendor.name,
       email: vendor.email,
       status: vendor.status,
-      owner: vendor.employees[0],
+      owner: {
+        userId: vendor.employees[0]?.userId,
+      },
     })),
   };
 });
