@@ -56,19 +56,13 @@
         </label>
         <input
           id="email"
-          v-model="editForm.email"
+          :value="userProfile.email"
           type="email"
-          required
-          autocomplete="email"
-          placeholder="請輸入 Email 地址"
-          class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
-          :class="{ 'border-red-500': errors.email }"
+          disabled
+          class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed text-gray-500"
         />
-        <p
-          v-if="errors.email"
-          class="text-red-500 text-xs mt-1"
-        >
-          {{ errors.email }}
+        <p class="text-xs text-gray-500 mt-1">
+          電子郵件為帳號識別，無法在此頁面修改。
         </p>
       </div>
 
@@ -101,7 +95,8 @@
           :disabled="isSubmitting"
           class="w-2/3 py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {{ isSubmitting ? '儲存中...' : '儲存變更' }}
+          <span v-if="isSubmitting">儲存中...</span>
+          <span v-else>儲存變更</span>
         </button>
       </div>
     </form>
@@ -110,32 +105,29 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-// *** 修正匯入路徑 ***
-import { useAuth } from '~/lib/auth';
-import type { UserProfile } from '~/types/user';
+import { useUser } from '~/lib/useUser';
+import type { UpdateProfilePayload } from '~/types/user';
 
-const { userProfile, updateProfile } = useAuth();
+const { userProfile, updateProfile } = useUser();
 const router = useRouter();
 
-// 編輯表單狀態初始化
-const editForm = reactive<
-  Omit<UserProfile, 'id' | 'role' | 'createdAt' | 'updatedAt'>
->({
-  name: '',
-  email: '',
+// 編輯表單狀態：確保所有屬性都有初始值，避免 'possibly undefined' 警告
+const editForm = reactive<UpdateProfilePayload>({
+  name: '', // 賦予明確的空字串初始值
   address: null,
 });
 
 const isSubmitting = ref(false);
-const errors = reactive({ name: '', email: '' });
+const errors = reactive({ name: '' });
 const apiError = ref('');
 const successMessage = ref('');
 
 // 組件載入時，從 Composable 載入當前資料
 onMounted(() => {
-  if (import.meta.client) {
-    editForm.name = userProfile.value.name;
-    editForm.email = userProfile.value.email;
+  // 檢查 userProfile.value.id 是否存在，以確保資料已載入
+  if (userProfile.value.id) {
+    // 使用 || '' 將 null 轉為空字串，以便在表單中正確顯示
+    editForm.name = userProfile.value.name || '';
     editForm.address = userProfile.value.address || '';
   }
 });
@@ -143,50 +135,60 @@ onMounted(() => {
 // 前端表單驗證邏輯
 const validate = () => {
   errors.name = '';
-  errors.email = '';
-  let isValid = true;
+  let isValid = true; // 這裡使用 (editForm.name || '') 確保它是一個 string，以解決 'possibly undefined' 警告
 
-  if (!editForm.name.trim()) {
-    errors.name = '姓名為必填欄位。';
-    isValid = false;
-  }
+  const currentName = editForm.name || '';
 
-  if (!editForm.email.trim() || !/\S+@\S+\.\S+/.test(editForm.email)) {
-    errors.email = '請輸入有效的電子郵件地址。';
+  if (!currentName.trim() || currentName.trim().length < 2) {
+    errors.name = '姓名為必填欄位，且至少需要2個字。';
     isValid = false;
   }
 
   return isValid;
 };
 
-// 提交表單處理 (模擬 API 流程)
+// 提交表單處理 (呼叫實際 API)
 const handleSubmit = async () => {
   apiError.value = '';
   successMessage.value = '';
 
   if (!validate()) {
     return;
+  } // 檢查是否有實際變更
+
+  const isNameChanged =
+    (editForm.name || '').trim() !== (userProfile.value.name || '').trim(); // 如果 editForm.address 是空字串，則傳遞 null 給後端
+  const newAddress = editForm.address?.trim() === '' ? null : editForm.address;
+  const isAddressChanged = newAddress !== userProfile.value.address;
+
+  if (!isNameChanged && !isAddressChanged) {
+    apiError.value = '您沒有進行任何變更。';
+    return;
   }
 
-  isSubmitting.value = true;
+  isSubmitting.value = true; // 構建只包含有變更的 payload
+
+  const payload: UpdateProfilePayload = {};
+  if (isNameChanged) {
+    payload.name = (editForm.name || '').trim();
+  }
+  if (isAddressChanged) {
+    payload.address = newAddress;
+  }
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // 模擬後端錯誤情境
-    if (editForm.email === 'error@test.com') {
-      throw new Error('此電子郵件已被其他帳戶使用或格式不符後端規範。');
-    }
-
-    await updateProfile(editForm);
+    // 呼叫實際的更新 Composable
+    await updateProfile(payload);
 
     successMessage.value = '個人檔案已成功更新！即將返回概覽頁面。';
 
     setTimeout(() => {
       router.push('/profile/overview');
     }, 1500);
-  } catch (err: any) {
-    apiError.value = err.message || '連線或伺服器發生未預期錯誤。';
+  } catch (err: unknown) {
+    // 確保將 unknown 錯誤斷言為 Error 型別
+    const error = err as Error; // 錯誤訊息來自 useUser.ts 中的 throw new Error(errorMessage)
+    apiError.value = error.message || '連線或伺服器發生未預期錯誤。';
   } finally {
     isSubmitting.value = false;
   }
@@ -196,7 +198,3 @@ const handleCancel = () => {
   router.push('/profile/overview');
 };
 </script>
-
-<style scoped>
-/* 保持簡潔，所有樣式透過 Tailwind 類別處理 */
-</style>
