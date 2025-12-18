@@ -151,6 +151,11 @@ export default defineEventHandler(async (event) => {
     OR: keyword
       ? [
           {
+            id: {
+              contains: keyword,
+            },
+          },
+          {
             user: {
               name: {
                 contains: keyword,
