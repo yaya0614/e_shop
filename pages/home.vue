@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import cardModel from '~/components/card-model.vue';
-
 import {
   Pagination,
   PaginationContent,
@@ -10,145 +11,152 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-const selected = ref('');
-const currentPage = ref(1);
-const product_list = [
-  {
-    id: 1,
-    descrition: 'BooksPad國寶（上下套書）優惠組｜閱讀器＋電子套書',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 2,
-    descrition: '【限量精裝】世界經典文學全集（10冊）| 莎士比亞＋海明威',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 3,
-    descrition: 'AI 時代的資料思維｜從 0 到 1 打造你的資料能力',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 4,
-    descrition: '解憂雜貨店｜東野圭吾作品集（2024 全新封面）',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 5,
-    descrition: '哈利波特套書（1–7）| 中英雙語版｜禮盒收藏組',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 6,
-    descrition: '深夜食堂漫畫精選集（1–5）｜溫暖系療癒讀物',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 7,
-    descrition: '投資最重要的事｜哈佛商學院指定閱讀',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 8,
-    descrition: 'Before the Coffee Gets Cold｜咖啡冷掉之前（英文版）',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 9,
-    descrition: '你的名字。小說版｜新海誠｜電影典藏封面',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 10,
-    descrition: '島田莊司推理精選（3冊套書）｜御手洗潔系列',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-  {
-    id: 11,
-    descrition: '島田莊司推理精選（3冊套書）｜御手洗潔系列',
-    pathtest: 'https://picsum.photos/200/300',
-    price: 7802,
-  },
-];
+/* -----------------------------
+ * 1. 商品型別（對齊後端）
+ * ----------------------------- */
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  discountPrice: number | null;
+  coverId: string | null;
+  quantity: number;
+  subCategory?: {
+    name: string;
+  };
+}
 
+/* -----------------------------
+ * 2. 狀態
+ * ----------------------------- */
 const router = useRouter();
 
-const callback = (id: number) => {
+type SortFilter = '' | 'NEWEST' | 'OLDEST' | 'PRICE_LOW' | 'PRICE_HIGH';
+
+const selectedFilter = ref<SortFilter>(''); // ← 預設排序
+const currentPage = ref(1);
+const limit = 10;
+
+/* -----------------------------
+ * 3. 串接 API（排序 + 分頁）
+ * ----------------------------- */
+const {
+  data: products,
+  pending,
+  error,
+} = await useFetch<Product[]>('/api/product', {
+  method: 'GET',
+  credentials: 'include',
+  lazy: true,
+  default: () => [],
+  query: computed(() => ({
+    page: currentPage.value,
+    limit,
+    Filter: selectedFilter.value || undefined, // 預設不傳
+  })),
+  watch: [currentPage, selectedFilter],
+});
+
+/* -----------------------------
+ * 4. 跳轉商品頁
+ * ----------------------------- */
+const goToDetail = (id: string) => {
   router.push({
     name: 'product-productId',
-    params: {
-      productId: id,
-    },
+    params: { productId: id },
   });
 };
 </script>
+
 <template>
   <div class="flex flex-col h-screen">
-    <div class="w-full flex justify-end pr-10 z-3">
+    <!-- 排序選單 -->
+    <div class="w-full flex justify-end pr-10 mt-4">
       <select
-        v-model="selected"
-        class="w-40 ml-10"
+        v-model="selectedFilter"
+        class="w-56 border rounded-lg p-2 text-sm bg-white"
       >
         <option value="">預設排序</option>
-        <option value="Low">價格：低至高</option>
-        <option value="High">價格：高至低</option>
+        <option value="NEWEST">最新上架</option>
+        <option value="OLDEST">最早上架</option>
+        <option value="PRICE_LOW">價格：低 → 高</option>
+        <option value="PRICE_HIGH">價格：高 → 低</option>
       </select>
     </div>
-    <div class="h-px flex ml-10 mr-10 bg-gray-200 my-2"></div>
 
-    <div class="flex-1 overflow-y-auto w-full">
-      <div class="grid grid-cols-5 gap-8 pl-8 pr-8 mt-4">
+    <div class="h-px mx-10 bg-gray-200 my-3"></div>
+
+    <!-- 商品列表 -->
+    <div class="flex-1 overflow-y-auto px-10">
+      <!-- 載入中 -->
+      <div
+        v-if="pending"
+        class="flex justify-center items-center h-64 text-gray-500"
+      >
+        載入商品中...
+      </div>
+
+      <!-- 錯誤 -->
+      <div
+        v-else-if="error"
+        class="text-center py-20 text-red-500"
+      >
+        <p>無法取得商品資料，請確認登入狀態。</p>
+        <p class="text-xs mt-2">錯誤碼：{{ error.statusCode }}</p>
+      </div>
+
+      <!-- 商品卡片 -->
+      <div
+        v-else
+        class="grid grid-cols-5 gap-8 mt-4"
+      >
         <div
-          v-for="product in product_list"
+          v-for="product in products"
           :key="product.id"
         >
           <cardModel
             :id="product.id"
-            :description="product.descrition"
-            :path-test="product.pathtest"
+            :description="product.name"
+            :path-test="product.coverId || 'https://picsum.photos/200/300'"
             :price="product.price"
-            :navigate_detail="callback"
-          ></cardModel>
+            :discount-price="product.discountPrice"
+            :navigate-detail="goToDetail"
+          />
         </div>
       </div>
+
+      <!-- 無資料 -->
+      <div
+        v-if="!pending && products.length === 0"
+        class="text-center py-20 text-gray-400"
+      >
+        目前沒有任何商品。
+      </div>
     </div>
-    <div class="shrink-0 mb-2">
+
+    <!-- 分頁 -->
+    <div class="shrink-0 py-4">
       <Pagination
         v-slot="{ page }"
-        :items-per-page="10"
-        :total="100"
-        :default-page="1"
-        @update:page="
-          (value) => {
-            currentPage = value;
-          }
+        :items-per-page="limit"
+        :total="
+          products.length < limit
+            ? currentPage * limit
+            : currentPage * limit + 1
         "
+        :default-page="1"
+        @update:page="(value) => (currentPage = value)"
       >
-        <PaginationContent v-slot="{ items }">
+        <PaginationContent>
           <PaginationPrevious />
-          <template
-            v-for="(item, index) in items"
-            :key="index"
+          <PaginationItem
+            :value="page"
+            :is-active="true"
           >
-            <PaginationItem
-              v-if="item.type === 'page'"
-              :value="item.value"
-              :is-active="item.value === page"
-            >
-              {{ item.value }}
-            </PaginationItem>
-          </template>
-          <PaginationEllipsis :index="4" />
+            {{ page }}
+          </PaginationItem>
+          <PaginationEllipsis />
           <PaginationNext />
         </PaginationContent>
       </Pagination>
