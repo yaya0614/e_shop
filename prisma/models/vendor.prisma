@@ -5,12 +5,13 @@ enum VendorStatus {
 }
 
 model Vendor {
-  id      String       @id @default(uuid())
-  name    String
-  phone   String
-  email   String       @unique
-  address String
-  status  VendorStatus @default(PENDING)
+  id        String       @id @default(uuid())
+  name      String
+  phone     String
+  email     String       @unique
+  address   String
+  status    VendorStatus @default(PENDING)
+  isDeleted Boolean      @default(false)
 
   products  Product[]
   employees Employee[]
