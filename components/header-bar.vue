@@ -35,7 +35,7 @@ function go(path: string) {
       >
       <Button
         variant="link"
-        @click="go('/member')"
+        @click="go('/profile/overview')"
         >會員中心</Button
       >
       <Button
