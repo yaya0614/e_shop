@@ -70,6 +70,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { FetchError } from 'ofetch';
+import { useUser } from '~/lib/useUser'; // 確保路徑正確
+const { fetchUserProfile } = useUser();
 
 const email = ref('');
 const password = ref('');
@@ -94,7 +96,7 @@ const handleLogin = async () => {
         password: password.value,
       },
     });
-
+    await fetchUserProfile();
     router.push('/home');
   } catch (error) {
     if (error instanceof FetchError) {
