@@ -96,12 +96,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (auth.vendor?.id !== vendorId.data.vendorId) {
+  /*if (auth.vendor?.id !== vendorId.data.vendorId) {
     throw createError({
       statusCode: 403,
       message: 'Forbidden',
     });
-  }
+  }*/
 
   const vendorInfo = await prisma.vendor.findFirst({
     where: {
