@@ -1,93 +1,368 @@
-<script setup lang="ts">
-import { onMounted } from 'vue';
-import { useUser } from '~/lib/useUser';
+<template>
+  <div class="max-w-2xl mx-auto mt-12 space-y-8 pb-20 px-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>👤 個人檔案概覽</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div
+          v-if="isLoading"
+          class="flex justify-center py-6"
+        >
+          <Spinner />
+        </div>
+        <div
+          v-else
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          <div
+            v-for="item in profileItems"
+            :key="item.label"
+            class="space-y-1"
+          >
+            <span class="text-sm text-muted-foreground">{{ item.label }}</span>
+            <p class="font-medium">{{ item.value }}</p>
+          </div>
+          <div class="md:col-span-2 pt-4 border-t mt-2">
+            <NuxtLink
+              to="/profile/edit"
+              class="text-blue-600 hover:underline text-sm"
+            >
+              編輯資料 →
+            </NuxtLink>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
+    <section class="p-8 border border-gray-200 rounded-xl shadow-lg bg-white">
+      <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+      >
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          🏪 我的商家
+        </h2>
+        <div class="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            @click="toggleView('apply')"
+          >
+            {{ activeView === 'apply' ? '取消' : '申請加入' }}
+          </Button>
+          <Button
+            size="sm"
+            @click="toggleView('create')"
+          >
+            {{ activeView === 'create' ? '取消' : '+ 註冊新商家' }}
+          </Button>
+        </div>
+      </div>
+
+      <transition name="fade">
+        <div
+          v-if="activeView === 'apply'"
+          class="mb-8 p-6 bg-blue-50 rounded-lg border border-dashed border-blue-300"
+        >
+          <h3 class="font-bold mb-4 text-blue-800">搜尋並申請加入商家</h3>
+          <div class="flex gap-2 mb-4">
+            <Input
+              v-model="searchId"
+              placeholder="請輸入商家 ID (UUID)"
+            />
+            <Button
+              :disabled="isSearching"
+              @click="handleSearch"
+              >搜尋</Button
+            >
+          </div>
+
+          <div
+            v-if="foundVendor"
+            class="bg-white p-4 rounded-lg border border-blue-200 animate-in fade-in"
+          >
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h4 class="font-bold text-lg text-gray-800">
+                  {{ foundVendor.name }}
+                </h4>
+                <p class="text-sm text-gray-500">
+                  店長：{{ foundVendor.ownerName || '系統管理員' }}
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                class="uppercase"
+                >{{ foundVendor.status }}</Badge
+              >
+            </div>
+            <div class="space-y-4 pt-4 border-t">
+              <div>
+                <label class="text-xs font-bold mb-1 block">申請職位</label>
+                <select
+                  v-model="selectedRole"
+                  class="w-full h-10 px-3 border rounded-md text-sm bg-white"
+                >
+                  <option value="CLERK">櫃員 (CLERK)</option>
+                  <option value="ADMIN">管理員 (ADMIN)</option>
+                </select>
+              </div>
+              <Button
+                class="w-full"
+                :disabled="vendorLoading"
+                @click="onApply"
+                >確認送出申請</Button
+              >
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade">
+        <div
+          v-if="activeView === 'create'"
+          class="mb-8 p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300"
+        >
+          <h3 class="font-bold mb-4 text-gray-800">填寫新商家註冊資訊</h3>
+          <div class="grid grid-cols-1 gap-5">
+            <div class="space-y-2">
+              <label class="text-sm font-medium flex items-center gap-1">
+                商家名稱 <span class="text-red-500">*</span>
+              </label>
+              <Input
+                v-model="newVendor.name"
+                placeholder="請輸入商家名稱"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium flex items-center gap-1">
+                聯絡電話 <span class="text-red-500">*</span>
+              </label>
+              <Input
+                v-model="newVendor.phone"
+                placeholder="聯絡電話"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium flex items-center gap-1">
+                商家 Email <span class="text-red-500">*</span>
+              </label>
+              <Input
+                v-model="newVendor.email"
+                type="email"
+                placeholder="商家 Email"
+              />
+              <p
+                v-if="newVendor.email && !isEmailValid"
+                class="text-xs text-red-500"
+              >
+                請輸入有效的 Email 格式
+              </p>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium flex items-center gap-1">
+                商家地址 <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                v-model="newVendor.address"
+                placeholder="商家地址"
+                class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="pt-2">
+              <Button
+                class="w-full"
+                :disabled="vendorLoading || !isFormValid"
+                @click="handleCreate"
+              >
+                {{ vendorLoading ? '處理中...' : '確認建立商家' }}
+              </Button>
+              <p
+                v-if="!isFormValid"
+                class="text-[10px] text-center mt-2 text-gray-400"
+              >
+                請填寫所有帶有 * 的必填欄位並確保 Email 格式正確
+              </p>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <div
+        v-if="vendorLoading && !vendors.length"
+        class="text-center py-4"
+      >
+        <Spinner />
+      </div>
+      <Alert
+        v-else-if="vendors.length === 0"
+        title="無管理商家"
+        >您目前沒有管理任何商家。</Alert
+      >
+      <div
+        v-else
+        class="space-y-3"
+      >
+        <div
+          v-for="v in vendors"
+          :key="v.id"
+          class="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50 group transition-all"
+        >
+          <div>
+            <h4 class="font-bold text-gray-800">{{ v.name }}</h4>
+            <div
+              class="flex gap-2 text-xs mt-1 text-muted-foreground uppercase"
+            >
+              <Badge variant="secondary">{{ v.role }}</Badge>
+              <span>{{ v.email }}</span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="opacity-0 group-hover:opacity-100 transition-opacity"
+            @click="enterDashboard(v.id)"
+          >
+            進入後台
+          </Button>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useUser } from '~/lib/useUser';
+import { useVendor, type VendorInfo, type EmployeeRole } from '~/lib/useVendor';
+import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Badge } from '~/components/ui/badge';
+import { Alert } from '~/components/ui/alert';
+import { Spinner } from '~/components/ui/spinner';
+import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
+
+const router = useRouter();
 const { userProfile, isLoading, fetchUserProfile } = useUser();
+const {
+  vendors,
+  loading: vendorLoading,
+  fetchVendors,
+  applyToVendor,
+  createVendor,
+} = useVendor();
+
+const activeView = ref<'none' | 'create' | 'apply'>('none');
+const isSearching = ref(false);
+
+const searchId = ref('');
+const foundVendor = ref<VendorInfo | null>(null);
+const selectedRole = ref<EmployeeRole>('CLERK');
+const newVendor = ref({ name: '', phone: '', email: '', address: '' });
+
+// 💡 必填驗證邏輯
+const isEmailValid = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(newVendor.value.email);
+});
+
+const isFormValid = computed(() => {
+  // 修復 lint 錯誤：移除未使用的 email 解構
+  const { name, phone, address } = newVendor.value;
+  return (
+    name.trim() !== '' &&
+    phone.trim() !== '' &&
+    isEmailValid.value &&
+    address.trim() !== ''
+  );
+});
+
+const profileItems = computed(() => [
+  { label: '名稱', value: userProfile.value.name || '未設定' },
+  { label: 'Email', value: userProfile.value.email },
+]);
+
+const toggleView = (view: 'create' | 'apply') => {
+  activeView.value = activeView.value === view ? 'none' : view;
+  foundVendor.value = null;
+};
+
+const handleSearch = async () => {
+  if (!searchId.value) return;
+  isSearching.value = true;
+  foundVendor.value = null;
+  try {
+    foundVendor.value = await $fetch<VendorInfo>(
+      `/api/vendor/${searchId.value}/info`,
+      {
+        credentials: 'include',
+      },
+    );
+  } catch (e: unknown) {
+    const err = e as {
+      statusCode?: number;
+      message?: string;
+      data?: { message?: string };
+    };
+    if (err.statusCode === 403) {
+      toast.error('無法查看商家資訊', {
+        description: '權限不足，請聯繫後端確認 API 權限設定。',
+      });
+    } else {
+      toast.error('搜尋失敗', {
+        description: err.data?.message || '找不到該商家 ID',
+      });
+    }
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+const onApply = async () => {
+  if (!foundVendor.value || !userProfile.value.email) return;
+  const ok = await applyToVendor(foundVendor.value.vendorId, {
+    email: userProfile.value.email,
+    role: selectedRole.value,
+  });
+  if (ok) {
+    activeView.value = 'none';
+    searchId.value = '';
+    foundVendor.value = null;
+    await fetchVendors();
+  }
+};
+
+const handleCreate = async () => {
+  if (!isFormValid.value) return;
+  const ok = await createVendor(newVendor.value);
+  if (ok) {
+    activeView.value = 'none';
+    newVendor.value = { name: '', phone: '', email: '', address: '' };
+  }
+};
+
+const enterDashboard = (id: string) => {
+  router.push(`/vendor/${id}`);
+};
 
 onMounted(() => {
-  fetchUserProfile();
+  Promise.all([fetchUserProfile(), fetchVendors()]);
 });
 </script>
 
-<template>
-  <NuxtLayout name="header-all">
-    <div class="flex flex-col w-full flex-1 items-center justify-center px-4">
-      <div
-        class="w-full max-w-md p-8 border border-gray-200 rounded-xl shadow-lg bg-white"
-      >
-        <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">
-          個人檔案概覽
-        </h2>
-
-        <!-- 載入中 -->
-        <div
-          v-if="isLoading"
-          class="text-center py-10 text-gray-500"
-        >
-          <svg
-            class="animate-spin h-5 w-5 text-blue-500 mx-auto mb-2"
-            viewBox="0 0 24 24"
-          ></svg>
-          <p>資料載入中...</p>
-        </div>
-
-        <!-- 未登入或訪客 -->
-        <div
-          v-else-if="userProfile.role === 'GUEST'"
-          class="text-center py-10 text-red-500"
-        >
-          <p>🔴 找不到使用者資料或您尚未登入。</p>
-        </div>
-
-        <!-- 使用者資料 -->
-        <div
-          v-else
-          class="space-y-4 text-gray-700"
-        >
-          <div>
-            <strong class="block text-sm font-medium mb-1">使用者名稱:</strong>
-            <span
-              class="block p-2 border border-gray-300 rounded-lg bg-gray-50"
-            >
-              {{ userProfile.name || '未設定' }}
-            </span>
-          </div>
-
-          <div>
-            <strong class="block text-sm font-medium mb-1">電子郵件:</strong>
-            <span
-              class="block p-2 border border-gray-300 rounded-lg bg-gray-50"
-            >
-              {{ userProfile.email }}
-            </span>
-          </div>
-
-          <div>
-            <strong class="block text-sm font-medium mb-1">聯絡地址:</strong>
-            <span
-              class="block p-2 border border-gray-300 rounded-lg bg-gray-50"
-            >
-              {{ userProfile.address || '未設定' }}
-            </span>
-          </div>
-
-          <div>
-            <strong class="block text-sm font-medium mb-1">權限等級:</strong>
-            <span
-              class="block p-2 border border-gray-300 rounded-lg bg-gray-50 capitalize"
-            >
-              {{ userProfile.role.toLowerCase() }}
-            </span>
-          </div>
-
-          <NuxtLink
-            to="/profile/edit"
-            class="mt-6 block text-center py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
-          >
-            前往編輯頁面 →
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
-  </NuxtLayout>
-</template>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
