@@ -4,7 +4,9 @@ import { Toaster } from 'vue-sonner';
 
 <template>
   <div class="flex flex-col w-screen h-screen max-h-screen overflow-hidden">
-    <Toaster />
-    <NuxtPage />
+    <NuxtLayout>
+      <Toaster />
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>
