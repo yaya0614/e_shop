@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { toast } from 'vue-sonner';
+import { FetchError } from 'ofetch';
+
 import { Button } from '@/components/ui/button';
 import {
   Carousel,
@@ -23,38 +25,45 @@ interface Product {
   subCategorys: Array<{ id: string; name: string; categoryId: string }>;
 }
 
-interface CartItem {
-  id: string;
-  description: string;
-  price: number;
-  imagePath: string;
-  quantity?: number;
+interface CartAPIResponse {
+  cartItems: Array<{
+    id: string;
+    quantity: number;
+    product: {
+      id: string;
+      name: string;
+      price: number;
+      discountPrice?: number;
+      quantity: number;
+      coverId?: string;
+    };
+  }>;
 }
 
 const router = useRouter();
 const route = useRoute();
 const selectedQuantity = ref(1);
-
-// 獲取路由參數中的 productId
 const productId = route.params.productId as string;
 
-// 2. 獲取單一產品詳情 (整合後端 API: GET /api/product/{productId})
+/* -----------------------------
+ * 商品詳情 (GET /api/product/{productId})
+ * ----------------------------- */
 const { data: product, pending: loadingDetail } = await useFetch<Product>(
   `/api/product/${productId}`,
   {
     method: 'GET',
     credentials: 'include',
-    key: `product-detail-${productId}`,
   },
 );
 
-// 相關書籍獲取邏輯維持原樣 (已包含 credentials: 'include')
+/* -----------------------------
+ * 其他書籍 (GET /api/product)
+ * ----------------------------- */
 const { data: relatedBooks, pending: loadingBooks } = await useFetch<Product[]>(
   '/api/product',
   {
     method: 'GET',
     credentials: 'include',
-    lazy: true,
     default: () => [],
     query: {
       page: 1,
@@ -64,34 +73,77 @@ const { data: relatedBooks, pending: loadingBooks } = await useFetch<Product[]>(
   },
 );
 
-// 3. 處理加入購物車
-const handleAddToCart = () => {
+/* -----------------------------
+ * 加入購物車邏輯 (整合 API)
+ * ----------------------------- */
+const handleAddToCart = async () => {
   if (!product.value) return;
 
-  const quantity = Number(selectedQuantity.value);
-  const cartJson = localStorage.getItem('myCart') || '[]';
-  const cartItems: CartItem[] = JSON.parse(cartJson) as CartItem[];
-
-  // 尋找是否已存在
-  const idx = cartItems.findIndex(
-    (item: CartItem) => item.id === product.value?.id,
-  );
-
-  if (idx > -1) {
-    cartItems[idx].quantity = (cartItems[idx].quantity || 0) + quantity;
-  } else {
-    cartItems.push({
-      id: product.value.id,
-      description: product.value.name,
-      price: product.value.discountPrice || product.value.price, // 優先存入折扣價
-      imagePath: product.value.coverId
-        ? `/api/image/${product.value.coverId}`
-        : 'https://picsum.photos/200/300',
-      quantity,
+  try {
+    // 1. 嘗試執行「新增」 (POST)
+    await $fetch('/api/cart', {
+      method: 'POST',
+      credentials: 'include',
+      body: {
+        productId: product.value.id,
+        quantity: selectedQuantity.value,
+      },
     });
-  }
 
-  localStorage.setItem('myCart', JSON.stringify(cartItems));
+    toast.success('成功加入購物車', {
+      action: {
+        label: '查看購物車',
+        onClick: () => navigateTo('/shop'),
+      },
+    });
+  } catch (error: unknown) {
+    // 2. 如果報 409，代表商品已在購物車，改用 PUT 更新數量
+    if (error instanceof FetchError && error.statusCode === 409) {
+      try {
+        const data = await $fetch<CartAPIResponse>('/api/cart', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        const existingItem = data.cartItems.find(
+          (item) => item.product.id === productId,
+        );
+
+        if (!existingItem) return;
+
+        // 3. 執行「更新」 (PUT)
+        await $fetch('/api/cart', {
+          method: 'PUT',
+          credentials: 'include',
+          body: {
+            cartItemId: existingItem.id,
+            quantity: existingItem.quantity + selectedQuantity.value,
+          },
+        });
+
+        toast.success('已更新購物車商品數量', {
+          action: {
+            label: '查看購物車',
+            onClick: () => navigateTo('/shop'),
+          },
+        });
+      } catch (putError: unknown) {
+        if (putError instanceof FetchError && putError.statusCode === 409) {
+          toast.error('庫存不足，無法加入更多');
+        } else {
+          toast.error('更新購物車失敗');
+        }
+      }
+      return;
+    }
+
+    if (error instanceof FetchError && error.statusCode === 401) {
+      toast.error('請先登入');
+      return;
+    }
+
+    toast.error('加入購物車失敗');
+  }
 };
 
 const goToDetail = (id: string) => {
@@ -198,15 +250,7 @@ const goToDetail = (id: string) => {
             :disabled="product.quantity <= 0"
             class="w-full"
             :variant="product.quantity <= 0 ? 'secondary' : 'default'"
-            @click="
-              handleAddToCart();
-              toast('成功加入購物車!', {
-                action: {
-                  label: '檢視購物車',
-                  onClick: () => navigateTo('/shop'),
-                },
-              });
-            "
+            @click="handleAddToCart"
           >
             {{ product.quantity > 0 ? '加入購物車' : '補貨中 / 已售完' }}
           </Button>
