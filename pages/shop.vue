@@ -73,7 +73,11 @@ const updateQuantity = async (
     return;
   }
 
+  const originalQuantity = item.quantity;
+
   try {
+    item.quantity = newQuantity;
+
     await $fetch('/api/cart', {
       method: 'PUT',
       credentials: 'include',
@@ -82,9 +86,9 @@ const updateQuantity = async (
         quantity: newQuantity,
       },
     });
-
-    await loadCart();
   } catch (error: unknown) {
+    item.quantity = originalQuantity;
+
     if (error instanceof FetchError) {
       if (error.statusCode === 409) {
         toast.error('庫存不足');
@@ -92,7 +96,6 @@ const updateQuantity = async (
         toast.error('更新失敗');
       }
     }
-    await loadCart(); // 發生錯誤時刷回原始數據
   }
 };
 
@@ -102,22 +105,26 @@ const updateQuantity = async (
 const confirmDelete = async () => {
   if (!itemToDelete.value) return;
 
+  const itemId = itemToDelete.value.id;
+
   try {
     await $fetch('/api/cart', {
       method: 'PUT',
       credentials: 'include',
       body: {
-        cartItemId: itemToDelete.value.id,
+        cartItemId: itemId,
         quantity: 0,
       },
     });
 
+    cartItems.value = cartItems.value.filter((item) => item.id !== itemId);
+
     toast.success('商品已移除');
-    await loadCart();
   } catch (error) {
     if (error instanceof FetchError) {
       toast.error('移除失敗');
     }
+  } finally {
     isDeleteDialogOpen.value = false;
     itemToDelete.value = null;
   }
