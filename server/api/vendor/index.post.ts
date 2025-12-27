@@ -118,6 +118,20 @@ export default defineEventHandler(async (event) => {
       },
     });
 
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `User applied for vendor ${body.data.name}`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendor.id,
+        logId: log.id,
+      },
+    });
+
     return vendor.id;
   });
 });

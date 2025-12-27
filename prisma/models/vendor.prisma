@@ -51,6 +51,7 @@ model Product {
   quantity      Int
   coverId       String?
   status        ProductStatus @default(INACTIVE)
+  isDeleted     Boolean       @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

@@ -121,9 +121,27 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.order.update({
-    where: { id: params.orderId, vendorId: params.vendorId },
-    data: { status: payload.data.status },
+  const userId = auth.userId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: params.orderId, vendorId: params.vendorId },
+      data: { status: payload.data.status },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Update Order Status`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: order.vendorId,
+        logId: log.id,
+      },
+    });
   });
 
   return {

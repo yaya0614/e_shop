@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (!auth.authenticated) {
+  if (!auth.authenticated || !auth.userId) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized',
@@ -97,6 +97,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const userId = auth.userId;
+  const vendorName = await prisma.vendor.findUnique({
+    where: { id: vendorId },
+    select: { name: true },
+  });
+
   await prisma.$transaction(async (tx) => {
     await tx.employee.deleteMany({
       where: {
@@ -110,6 +116,17 @@ export default defineEventHandler(async (event) => {
       data: {
         isDeleted: true,
         status: 'INACTIVE',
+      },
+    });
+
+    await tx.adminLog.create({
+      data: {
+        log: {
+          create: {
+            userId: userId,
+            message: `Delete Vendor ${vendorName?.name || vendorId}`,
+          },
+        },
       },
     });
   });

@@ -262,6 +262,13 @@ export default defineEventHandler(async (event) => {
     }
 
     await Promise.all(promises);
+
+    await tx.log.create({
+      data: {
+        userId: userId,
+        message: `User created order ${order.id} with ${payload.data.products.length} products`,
+      },
+    });
   });
 
   return {

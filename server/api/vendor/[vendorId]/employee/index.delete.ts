@@ -97,6 +97,13 @@ export default defineEventHandler(async (event) => {
       id: payload.data.id,
       vendorId: vendorId,
     },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
 
   if (!existingEmployee) {
@@ -106,10 +113,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.employee.delete({
-    where: {
-      id: payload.data.id,
-      vendorId: vendorId,
-    },
+  const userId = auth.userId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.employee.delete({
+      where: {
+        id: payload.data.id,
+        vendorId: vendorId,
+      },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Delete Employee ${existingEmployee.user.name}`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendorId,
+        logId: log.id,
+      },
+    });
   });
 });
