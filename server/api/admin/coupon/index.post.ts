@@ -146,16 +146,32 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.coupon.create({
-    data: {
-      type: payload.data.type,
-      discountPrice: payload.data.discount ?? null,
-      couponPercentage: payload.data.couponPercentage ?? null,
-      maxPrice: payload.data.maxPrice ?? null,
-      minPrice: payload.data.minPrice ?? null,
-      code: payload.data.code,
-    },
+  const userId = auth.userId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.coupon.create({
+      data: {
+        type: payload.data.type,
+        discountPrice: payload.data.discount ?? null,
+        couponPercentage: payload.data.couponPercentage ?? null,
+        maxPrice: payload.data.maxPrice ?? null,
+        minPrice: payload.data.minPrice ?? null,
+        code: payload.data.code,
+      },
+    });
+
+    await tx.adminLog.create({
+      data: {
+        log: {
+          create: {
+            userId: userId,
+            message: `Create Coupon ${payload.data.code || payload.data.type}`,
+          },
+        },
+      },
+    });
   });
+
   return {
     status: 'success',
   };

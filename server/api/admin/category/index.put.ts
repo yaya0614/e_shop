@@ -110,13 +110,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.category.update({
-    where: {
-      id: originCategoryId,
-    },
-    data: {
-      name: categoryName,
-    },
+  const userId = auth.userId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.category.update({
+      where: {
+        id: originCategoryId,
+      },
+      data: {
+        name: categoryName,
+      },
+    });
+
+    await tx.adminLog.create({
+      data: {
+        log: {
+          create: {
+            userId: userId,
+            message: `Update Category ${categoryName}`,
+          },
+        },
+      },
+    });
   });
 
   return {

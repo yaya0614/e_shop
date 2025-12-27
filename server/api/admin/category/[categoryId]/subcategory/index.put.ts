@@ -77,6 +77,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const userId = auth.userId;
+
   const payload = await readValidatedBody(event, Schema.safeParse);
   if (!payload.success) {
     throw createError({
@@ -111,13 +113,26 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.subCategory.update({
-    where: {
-      id: originsubCategoryId,
-    },
-    data: {
-      name: subCategoryName,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.subCategory.update({
+      where: {
+        id: originsubCategoryId,
+      },
+      data: {
+        name: subCategoryName,
+      },
+    });
+
+    await tx.adminLog.create({
+      data: {
+        log: {
+          create: {
+            userId: userId,
+            message: `Update SubCategory ${subCategoryName}`,
+          },
+        },
+      },
+    });
   });
 
   return {

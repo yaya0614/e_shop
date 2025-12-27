@@ -100,27 +100,56 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const userId = auth.userId;
+
   if (action === 'REJECT') {
-    await prisma.vendor.update({
-      where: {
-        id: vendorId,
-      },
-      data: {
-        status: VendorStatus.INACTIVE,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.vendor.update({
+        where: {
+          id: vendorId,
+        },
+        data: {
+          status: VendorStatus.INACTIVE,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          log: {
+            create: {
+              userId: userId,
+              message: `Reject Vendor Apply ${vendor.name}`,
+            },
+          },
+        },
+      });
     });
 
     return { message: 'rejected successfully' };
   }
   if (action === 'APPROVE') {
-    await prisma.vendor.update({
-      where: {
-        id: vendorId,
-      },
-      data: {
-        status: VendorStatus.ACTIVE,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.vendor.update({
+        where: {
+          id: vendorId,
+        },
+        data: {
+          status: VendorStatus.ACTIVE,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          log: {
+            create: {
+              userId: userId,
+              message: `Approve Vendor Apply ${vendor.name}`,
+            },
+          },
+        },
+      });
     });
+
     return { message: 'approved successfully' };
   }
 });

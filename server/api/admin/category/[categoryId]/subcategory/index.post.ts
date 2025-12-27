@@ -76,6 +76,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const userId = auth.userId;
+
   const categoryId = getRouterParam(event, 'categoryId');
   if (!categoryId) {
     throw createError({
@@ -103,11 +105,24 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.subCategory.create({
-    data: {
-      categoryId: categoryId,
-      name: subCategoryName,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.subCategory.create({
+      data: {
+        categoryId: categoryId,
+        name: subCategoryName,
+      },
+    });
+
+    await tx.adminLog.create({
+      data: {
+        log: {
+          create: {
+            userId: userId,
+            message: `Create SubCategory ${subCategoryName}`,
+          },
+        },
+      },
+    });
   });
 
   return {
