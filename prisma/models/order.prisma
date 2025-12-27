@@ -23,6 +23,9 @@ model Order {
 
   vendorId String
   vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
 }
 
 model OrderProduct {

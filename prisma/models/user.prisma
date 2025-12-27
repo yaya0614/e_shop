@@ -19,6 +19,7 @@ model User {
   orders    Order[]
   employees Employee[]
   logs      Log[]
+  payments  Payment[]
 }
 
 model CartProduct {
