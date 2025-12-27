@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
 const router = useRouter();
 
 const navigationTo = (code: string) => {
@@ -25,5 +27,3 @@ const navigationTo = (code: string) => {
     <button @click="navigationTo('2')">Go to Test 2</button>
   </div>
 </template>
-
-<style scoped></style>

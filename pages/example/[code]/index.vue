@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const route = useRoute("example-code");
+import { useRoute } from 'vue-router';
+
+const route = useRoute('example-code');
 const code = route.params.code;
 </script>
 
@@ -16,7 +18,3 @@ const code = route.params.code;
     <h1>Example code: {{ code }}</h1>
   </div>
 </template>
-
-<style scoped></style>
-
-MainPage 

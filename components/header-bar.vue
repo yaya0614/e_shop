@@ -27,17 +27,17 @@ async function logout() {
     role: 'GUEST',
   };
 
-  router.push('/home');
+  router.push('/');
 }
 </script>
 
 <template>
-  <div class="flex flex-row sticky top-0 z-10 bg-gray-300 py-2 w-full">
+  <div class="flex flex-row sticky top-0 z-10 bg-gray-300 py-2 w-full h-fit">
     <div class="ml-10">
       <Button
         class="text-3xl"
         variant="link"
-        @click="go('/home')"
+        @click="go('/')"
         >閱森書店</Button
       >
     </div>

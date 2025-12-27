@@ -18,7 +18,7 @@ const category_name = [
 </script>
 
 <template>
-  <div class="flex-1 flex-col w-full overflow-x-hidden">
+  <div class="flex-col h-full max-h-full flex">
     <headerBar />
     <div class="flex flex-row justify-between w-full mt-4">
       <p class="text-muted-foreground text-4xl leading-tight ml-10 flex-1"></p>
@@ -45,14 +45,17 @@ const category_name = [
             >
               <NavigationMenuItem>
                 <NavigationMenuTrigger>
-                  {{ value.title }}</NavigationMenuTrigger
-                >
+                  {{ value.title }}
+                </NavigationMenuTrigger>
               </NavigationMenuItem>
             </div>
           </NavigationMenuList>
-        </div></NavigationMenu
-      >
+        </div>
+      </NavigationMenu>
     </div>
-    <slot />
+    <div class="flex-1 flex w-full overflow-y-scroll">
+      <slot />
+    </div>
+    <slot name="footer" />
   </div>
 </template>

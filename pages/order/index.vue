@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import type { GetOrderHistoryResponse, OrderHistoryItem } from '~/types/order';
+import { useRouter } from 'vue-router';
 import { FetchError } from 'ofetch';
 import { toast } from 'vue-sonner';
-import { useRouter } from 'vue-router';
+import type { GetOrderHistoryResponse, OrderHistoryItem } from '~/types/order';
 
 const router = useRouter();
+
 const orders = ref<OrderHistoryItem[]>([]);
 const isLoading = ref(true);
 
@@ -56,78 +57,84 @@ const formatDate = (dateString: string) => {
 </script>
 
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6">我的訂單歷史記錄</h1>
+  <NuxtLayout name="header-all">
+    <div class="flex flex-col w-full flex-1 px-10">
+      <h1 class="text-3xl font-bold mb-6 mt-4">我的訂單歷史記錄</h1>
 
-    <div
-      v-if="isLoading"
-      class="text-center"
-    >
-      <p>載入中...</p>
-    </div>
-
-    <div
-      v-else-if="orders.length === 0"
-      class="text-center py-10 border rounded"
-    >
-      <p>您目前沒有任何訂單記錄。</p>
-    </div>
-
-    <div
-      v-else
-      class="space-y-4"
-    >
+      <!-- 載入中 -->
       <div
-        v-for="order in orders"
-        :key="order.id"
-        class="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow"
-        @click="goToOrderDetail(order.id)"
+        v-if="isLoading"
+        class="flex justify-center items-center h-64 text-gray-500"
       >
-        <div class="flex justify-between items-start border-b pb-3 mb-3">
-          <h2 class="text-xl font-semibold">
-            訂單編號: {{ order.id.substring(0, 8) }}...
-          </h2>
-          <span
-            :class="[
-              'font-medium px-3 py-1 rounded-full text-sm',
-              {
-                'bg-green-100 text-green-800': order.status === 'RECEIVED',
-                'bg-yellow-100 text-yellow-800': order.status === 'PROCESSING',
-              },
-            ]"
-          >
-            {{ order.status }}
-          </span>
-        </div>
+        <p>載入中...</p>
+      </div>
 
-        <p class="text-gray-600 mb-2">
-          訂單日期: {{ formatDate(order.createdAt) }}
-        </p>
-        <p class="text-gray-600 mb-2">供應商: **{{ order.vendor.name }}**</p>
+      <!-- 無訂單 -->
+      <div
+        v-else-if="orders.length === 0"
+        class="text-center py-20 border rounded text-gray-400"
+      >
+        <p>您目前沒有任何訂單記錄。</p>
+      </div>
 
-        <p class="text-lg font-bold text-indigo-600 mb-4">
-          總金額: ${{ order.price.toLocaleString() }}
-        </p>
-
-        <div class="mt-2 text-sm text-gray-500">
-          <p class="font-medium mb-1">包含商品:</p>
-          <ul class="list-disc list-inside">
-            <li
-              v-for="(item, index) in order.products.slice(0, 2)"
-              :key="index"
+      <!-- 訂單列表 -->
+      <div
+        v-else
+        class="space-y-4 mb-6"
+      >
+        <div
+          v-for="order in orders"
+          :key="order.id"
+          class="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          @click="goToOrderDetail(order.id)"
+        >
+          <div class="flex justify-between items-start border-b pb-3 mb-3">
+            <h2 class="text-xl font-semibold">
+              訂單編號: {{ order.id.substring(0, 8) }}...
+            </h2>
+            <span
+              :class="[
+                'font-medium px-3 py-1 rounded-full text-sm',
+                {
+                  'bg-green-100 text-green-800': order.status === 'RECEIVED',
+                  'bg-yellow-100 text-yellow-800':
+                    order.status === 'PROCESSING',
+                },
+              ]"
             >
-              {{ item.product.name }} (x{{ item.quantity }})
-            </li>
-            <li v-if="order.products.length > 2">
-              ... 還有 {{ order.products.length - 2 }} 件商品
-            </li>
-          </ul>
-        </div>
+              {{ order.status }}
+            </span>
+          </div>
 
-        <div class="mt-4 text-right text-sm text-blue-500 hover:underline">
-          查看詳情 →
+          <p class="text-gray-600 mb-2">
+            訂單日期: {{ formatDate(order.createdAt) }}
+          </p>
+          <p class="text-gray-600 mb-2">供應商: **{{ order.vendor.name }}**</p>
+
+          <p class="text-lg font-bold text-indigo-600 mb-4">
+            總金額: ${{ order.price.toLocaleString() }}
+          </p>
+
+          <div class="mt-2 text-sm text-gray-500">
+            <p class="font-medium mb-1">包含商品:</p>
+            <ul class="list-disc list-inside">
+              <li
+                v-for="(item, index) in order.products.slice(0, 2)"
+                :key="index"
+              >
+                {{ item.product.name }} (x{{ item.quantity }})
+              </li>
+              <li v-if="order.products.length > 2">
+                ... 還有 {{ order.products.length - 2 }} 件商品
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-4 text-right text-sm text-blue-500 hover:underline">
+            查看詳情 →
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </NuxtLayout>
 </template>
