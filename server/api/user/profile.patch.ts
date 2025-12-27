@@ -101,19 +101,30 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const updatedUser = await prisma.user.update({
-      where: { id: auth.userId },
-      data: body,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        address: true,
-        role: true,
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id: auth.userId },
+        data: body,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          address: true,
+          role: true,
+        },
+      });
+
+      await tx.log.create({
+        data: {
+          userId: auth.userId,
+          message: `User ${updatedUser.email} updated profile`,
+        },
+      });
+
+      return updatedUser;
     });
 
-    return { success: true, user: updatedUser };
+    return { success: true, user: result };
   } catch (e: unknown) {
     const dbError = e as {
       code?: string;

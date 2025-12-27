@@ -127,6 +127,13 @@ export default defineEventHandler(async (event) => {
     role: user.role,
   });
 
+  await prisma.log.create({
+    data: {
+      userId: user.id,
+      message: `User ${user.email} signed up`,
+    },
+  });
+
   return {
     token,
   };

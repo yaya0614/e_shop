@@ -118,6 +118,13 @@ export default defineEventHandler(async (event) => {
       },
     });
 
+    await tx.log.create({
+      data: {
+        userId: userId,
+        message: `User applied for vendor ${body.data.name}`,
+      },
+    });
+
     return vendor.id;
   });
 });

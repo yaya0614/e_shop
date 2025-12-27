@@ -106,13 +106,23 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.coupon.update({
-    where: {
-      code: code,
-    },
-    data: {
-      userId: auth.userId,
-    },
+  const userId = auth.userId;
+  await prisma.$transaction(async (tx) => {
+    await tx.coupon.update({
+      where: {
+        code: code,
+      },
+      data: {
+        userId: auth.userId,
+      },
+    });
+
+    await tx.log.create({
+      data: {
+        userId: userId,
+        message: `User used coupon code ${code}`,
+      },
+    });
   });
 
   return {
