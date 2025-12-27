@@ -14,6 +14,7 @@ const route = useRoute();
 const mainMenu: MenuItem[] = [
   { label: '操作日誌', path: '/admin' },
   { label: '商家管理', path: '/admin/vendor' },
+  { label: '分類管理', path: '/admin/category' },
 ];
 
 const bottomMenu: MenuItem[] = [
