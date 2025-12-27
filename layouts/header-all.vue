@@ -2,19 +2,28 @@
 import headerBar from '~/components/header-bar.vue';
 import { SearchIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
-
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 
-const category_name = [
-  { id: 1, title: '商業理財' },
-  { id: 2, title: '心理勵志' },
-  { id: 3, title: '文學故事' },
-  { id: 4, title: '人文社會' },
-  { id: 5, title: '醫療保健' },
-  { id: 6, title: '生活風格' },
-  { id: 7, title: '宗教命理' },
-];
+interface SubCategory {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  subCategories: SubCategory[];
+}
+
+const { data: categoriesData } = await useFetch<{ categories: Category[] }>(
+  '/api/category',
+  {
+    method: 'GET',
+  },
+);
+
+const categories = computed(() => categoriesData.value?.categories || []);
 </script>
 
 <template>
@@ -40,13 +49,36 @@ const category_name = [
         <div class="z-4">
           <NavigationMenuList class="gap-12">
             <div
-              v-for="value in category_name"
-              :key="value.id"
+              v-for="category in categories"
+              :key="category.id"
             >
               <NavigationMenuItem>
                 <NavigationMenuTrigger>
-                  {{ value.title }}
+                  {{ category.name }}
                 </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul
+                    class="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]"
+                  >
+                    <li
+                      v-for="subCategory in category.subCategories"
+                      :key="subCategory.id"
+                    >
+                      <NavigationMenuLink as-child>
+                        <div class="text-sm font-medium leading-none">
+                          {{ subCategory.name }}
+                        </div>
+                      </NavigationMenuLink>
+                    </li>
+                    <li v-if="category.subCategories.length === 0">
+                      <div
+                        class="block select-none space-y-1 rounded-md p-3 leading-none text-sm text-muted-foreground"
+                      >
+                        暫無子分類
+                      </div>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
               </NavigationMenuItem>
             </div>
           </NavigationMenuList>
