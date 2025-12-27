@@ -2,6 +2,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
 import type { AuthContextPayload } from '~/types/auth';
 import { z } from 'zod';
+import { VendorStatus } from '~/prisma/generated/enums';
 
 extendZodWithOpenApi(z);
 
@@ -103,6 +104,13 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       message: 'Vendor not found',
+    });
+  }
+
+  if (vendor.status !== VendorStatus.ACTIVE) {
+    throw createError({
+      statusCode: 403,
+      message: 'Vendor is not active',
     });
   }
 
