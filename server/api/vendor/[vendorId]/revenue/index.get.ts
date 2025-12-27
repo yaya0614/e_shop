@@ -214,22 +214,64 @@ export default defineEventHandler(async (event) => {
     { header: '價格', key: 'price', width: 15 },
   ];
 
+  const title1 = `商家財報 - ${nameVendor} (${revenueDate})`;
+  worksheet.insertRow(1, [title1]);
+  worksheet.mergeCells(1, 1, 1, worksheet.columns.length);
+  worksheet.getCell(1, 1).font = { bold: true, size: 16 };
+  worksheet.getCell(1, 1).alignment = {
+    horizontal: 'center',
+    vertical: 'middle',
+  };
+  worksheet.getRow(1).height = 32;
+
+  const title2 = `商家訂單總覽 - ${nameVendor} (${revenueDate})`;
+  worksheet2.insertRow(1, [title2]);
+  worksheet2.mergeCells(1, 1, 1, worksheet2.columns.length);
+  worksheet2.getCell(1, 1).font = { bold: true, size: 16 };
+  worksheet2.getCell(1, 1).alignment = {
+    horizontal: 'center',
+    vertical: 'middle',
+  };
+  worksheet2.getRow(1).height = 32;
+
+  worksheet.views = [{ state: 'frozen', ySplit: 2 }];
+  worksheet2.views = [{ state: 'frozen', ySplit: 2 }];
+
+  const headerStyle = {
+    font: { bold: true },
+    alignment: { horizontal: 'center', vertical: 'middle' },
+    fill: {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFEFEFEF' },
+    },
+  };
+
+  const headerRow1 = worksheet.getRow(2);
+  Object.assign(headerRow1, headerStyle);
+  headerRow1.height = 34;
+
+  const headerRow2 = worksheet2.getRow(2);
+  Object.assign(headerRow2, headerStyle);
+  headerRow2.height = 34;
+
   worksheet.addRows(
-    sortedProductSellCount.map(([name, { quantity, price }]) => {
-      return {
-        name: name,
-        quantity: quantity,
-        Price: price,
-        ProductPrice: quantity * price,
-      };
-    }),
+    sortedProductSellCount.map(([name, { quantity, price }]) => ({
+      name,
+      quantity,
+      Price: price,
+      ProductPrice: quantity * price,
+    })),
   );
 
   worksheet.addRow({});
-  worksheet.addRow({
+
+  const totalRow = worksheet.addRow({
     name: '總營收',
     ProductPrice: totalRevenue,
   });
+  totalRow.font = { bold: true };
+  totalRow.height = 30;
 
   vendorFinishedOrders?.orders.forEach((order) => {
     worksheet2.addRow({
@@ -238,6 +280,36 @@ export default defineEventHandler(async (event) => {
       price: order.price,
     });
   });
+
+  const applyRowStyle = (ws: ExcelJS.Worksheet) => {
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber >= 3) {
+        row.height = 28;
+        row.alignment = { vertical: 'middle' };
+      }
+    });
+  };
+
+  applyRowStyle(worksheet);
+  applyRowStyle(worksheet2);
+
+  worksheet.getColumn('quantity').alignment = {
+    horizontal: 'center',
+    vertical: 'middle',
+  };
+  worksheet.getColumn('Price').alignment = {
+    horizontal: 'right',
+    vertical: 'middle',
+  };
+  worksheet.getColumn('ProductPrice').alignment = {
+    horizontal: 'right',
+    vertical: 'middle',
+  };
+
+  worksheet2.getColumn('price').alignment = {
+    horizontal: 'right',
+    vertical: 'middle',
+  };
 
   const buffer = await workbook.xlsx.writeBuffer();
   const filename = `${nameVendor}_${revenueDate}_revenue_report.xlsx`;
