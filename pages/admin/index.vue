@@ -146,7 +146,7 @@ const getLogIcon = (message: string) => {
 
     <div
       v-else
-      class="space-y-3"
+      class="space-y-3 overflow-y-auto flex flex-col flex-1 min-h-0"
     >
       <div
         v-for="log in logs"
@@ -158,7 +158,7 @@ const getLogIcon = (message: string) => {
       >
         <div class="flex items-start gap-4">
           <div
-            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-xl font-bold shadow"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-xl font-bold shadow"
           >
             {{ getLogIcon(log.message) }}
           </div>

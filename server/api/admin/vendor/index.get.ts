@@ -22,12 +22,18 @@ const vendorSchema = z.object({
     description: 'Vendor Status',
     example: 'ACTIVE',
   }),
-  owner: z.object({
-    userId: z.string().openapi({
-      description: 'Owner User Id',
-      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567007',
-    }),
-  }),
+  owner: z
+    .object({
+      userId: z.string().openapi({
+        description: 'Owner User Id',
+        example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567007',
+      }),
+      name: z.string().openapi({
+        description: 'Owner Name',
+        example: '張晨',
+      }),
+    })
+    .nullable(),
 });
 
 const responsesSchema = z.object({
@@ -88,6 +94,11 @@ export default defineEventHandler(async (event) => {
         where: { role: 'OWNER' },
         select: {
           userId: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },
@@ -101,6 +112,7 @@ export default defineEventHandler(async (event) => {
       status: vendor.status,
       owner: {
         userId: vendor.employees[0]?.userId,
+        name: vendor.employees[0]?.user.name,
       },
     })),
   };

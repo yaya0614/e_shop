@@ -10,6 +10,7 @@ const contentSchema = z.object({
     example: 'd4e5f6a7-b890-1234-cdef-567890abcedf',
   }),
 });
+
 registry.registerPath({
   method: 'delete',
   path: 'api/admin/vendor/{vendorId}',
@@ -44,9 +45,9 @@ registry.registerPath({
 
 export default defineEventHandler(async (event) => {
   const auth: AuthContextPayload = event.context.auth;
-  const params = await getValidatedRouterParams(event, contentSchema.safeParse);
+  const payload = await readValidatedBody(event, contentSchema.safeParse);
 
-  if (!params.success) {
+  if (!payload.success) {
     throw createError({
       statusCode: 400,
       message: 'Bad Request',
@@ -66,7 +67,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const vendorId = params.data.vendorId;
+  const vendorId = payload.data.vendorId;
   const vendor = await prisma.vendor.findUnique({
     where: {
       id: vendorId,

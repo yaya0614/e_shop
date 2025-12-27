@@ -11,7 +11,10 @@ interface MenuItem {
 const router = useRouter();
 const route = useRoute();
 
-const mainMenu: MenuItem[] = [{ label: '操作日誌', path: '/admin' }];
+const mainMenu: MenuItem[] = [
+  { label: '操作日誌', path: '/admin' },
+  { label: '商家管理', path: '/admin/vendor' },
+];
 
 const bottomMenu: MenuItem[] = [
   {
@@ -30,7 +33,9 @@ const isActive = (path?: string): boolean => {
 };
 </script>
 <template>
-  <aside class="w-64 h-screen bg-white border-r flex flex-col justify-between">
+  <aside
+    class="w-64 shrink-0 bg-white border-r flex flex-col justify-between overflow-y-auto"
+  >
     <nav class="px-3 py-4 space-y-1">
       <button
         v-for="item in mainMenu"
