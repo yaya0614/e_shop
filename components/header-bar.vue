@@ -3,6 +3,7 @@ import { useUser } from '~/lib/useUser'; // 確保路徑正確
 
 const router = useRouter();
 const { userProfile } = useUser();
+const isAdmin = computed(() => userProfile.value.role === 'ADMIN');
 
 // 判斷是否登入：檢查 id 是否不為空，或者 role 是否不是 GUEST
 const isLoggedIn = computed(
@@ -63,25 +64,36 @@ async function logout() {
         <Button
           variant="link"
           @click="go('/profile/overview')"
-          >會員中心</Button
         >
+          會員中心
+        </Button>
         <Button
           variant="link"
           @click="logout"
-          >登出</Button
         >
+          登出
+        </Button>
       </template>
 
       <Button
         variant="link"
         @click="go('/coupon')"
-        >折價券</Button
       >
+        折價券
+      </Button>
       <Button
         variant="link"
         @click="go('/shop')"
-        >購物中心</Button
       >
+        購物中心
+      </Button>
+      <Button
+        v-if="isAdmin"
+        variant="link"
+        @click="go('/admin')"
+      >
+        管理中心
+      </Button>
     </div>
   </div>
 </template>
