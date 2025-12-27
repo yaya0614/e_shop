@@ -130,12 +130,30 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'Forbidden' });
   }
 
-  await prisma.vendor.update({
-    where: {
-      id: vendorId.data.vendorId,
-    },
-    data: body.data,
+  const userId = auth.userId;
+  await prisma.$transaction(async (tx) => {
+    await tx.vendor.update({
+      where: {
+        id: vendorId.data.vendorId,
+      },
+      data: body.data,
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Update Vendor Info`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendorId.data.vendorId,
+        logId: log.id,
+      },
+    });
   });
+
   setResponseStatus(event, 204);
   return;
 });

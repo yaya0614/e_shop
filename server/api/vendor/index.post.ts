@@ -118,10 +118,17 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    await tx.log.create({
+    const log = await tx.log.create({
       data: {
         userId: userId,
         message: `User applied for vendor ${body.data.name}`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendor.id,
+        logId: log.id,
       },
     });
 

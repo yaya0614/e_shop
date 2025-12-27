@@ -138,15 +138,38 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const employee = await prisma.employee.create({
-    data: {
-      vendorId: vendorId,
-      userId: user.id,
-      role: payload.data.role,
-    },
-  });
+  const userId = auth.userId;
 
-  return {
-    id: employee.id,
-  };
+  await prisma.$transaction(async (tx) => {
+    const employee = await tx.employee.create({
+      data: {
+        vendorId: vendorId,
+        userId: user.id,
+        role: payload.data.role,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Create Employee ${employee.user.name}`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendorId,
+        logId: log.id,
+      },
+    });
+
+    return employee.id;
+  });
 });

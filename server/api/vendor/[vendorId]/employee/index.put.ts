@@ -120,13 +120,37 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.employee.update({
-    where: {
-      id: payload.data.id,
-      vendorId: vendorId,
-    },
-    data: {
-      role: payload.data.role,
-    },
+  const userId = auth.userId;
+  await prisma.$transaction(async (tx) => {
+    const employee = await tx.employee.update({
+      where: {
+        id: payload.data.id,
+        vendorId: vendorId,
+      },
+      data: {
+        role: payload.data.role,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Update Employee Role ${employee.user.name} to ${payload.data.role}`,
+      },
+    });
+
+    await tx.vendorLog.create({
+      data: {
+        vendorId: vendorId,
+        logId: log.id,
+      },
+    });
   });
 });

@@ -89,12 +89,34 @@ export default defineEventHandler(async (event) => {
       message: 'Product not found',
     });
   }
-  await prisma.product.delete({
-    where: {
-      id: productId,
-      vendorId: vendorId,
-    },
+
+  const userId = auth.userId;
+  await prisma.$transaction(async (tx) => {
+    await tx.product.update({
+      where: {
+        id: productId,
+        vendorId: vendorId,
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Delete Product ${product.name}`,
+      },
+    });
+
+    await tx.productLog.create({
+      data: {
+        productId: productId,
+        logId: log.id,
+      },
+    });
   });
+
   return {
     status: 'deleted successfully',
   };

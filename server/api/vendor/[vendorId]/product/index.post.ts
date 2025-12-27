@@ -105,16 +105,34 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await prisma.product.create({
-    data: {
-      vendorId: vendorId,
-      name: payload.data.productName,
-      description: payload.data.productDescription ?? null,
-      price: payload.data.price,
-      quantity: payload.data.quantity,
-      coverId: payload.data.coverId ?? null,
-    },
+  const userId = auth.userId;
+  await prisma.$transaction(async (tx) => {
+    const product = await tx.product.create({
+      data: {
+        vendorId: vendorId,
+        name: payload.data.productName,
+        description: payload.data.productDescription ?? null,
+        price: payload.data.price,
+        quantity: payload.data.quantity,
+        coverId: payload.data.coverId ?? null,
+      },
+    });
+
+    const log = await tx.log.create({
+      data: {
+        userId: userId,
+        message: `Create Product ${payload.data.productName}`,
+      },
+    });
+
+    await tx.productLog.create({
+      data: {
+        productId: product.id,
+        logId: log.id,
+      },
+    });
   });
+
   return {
     status: 'success',
   };
