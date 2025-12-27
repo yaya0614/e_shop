@@ -14,7 +14,6 @@ const route = useRoute();
 const mainMenu: MenuItem[] = [
   { label: 'Dashboard', path: '/vendor' },
   { label: '商品', path: '/vendor/product' },
-  { label: '建立商品', path: '/vendor/inventory' },
   { label: '訂單', path: '/vendor/order' },
 ];
 
@@ -47,7 +46,6 @@ const isActive = (path?: string): boolean => {
       </button>
     </nav>
 
-    <!-- Bottom menu -->
     <div class="px-3 pb-4 space-y-1">
       <button
         v-for="item in bottomMenu"

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 
 interface Props {
   id: string;
-  description: string; // 接收 API 的 product.name
+  description: string;
   pathTest: string;
   price: number;
   discountPrice?: number | null;
@@ -15,7 +15,6 @@ const props = withDefaults(defineProps<Props>(), {
   discountPrice: null,
 });
 
-// 判斷是否有折扣邏輯
 const hasDiscount = computed(() => {
   return (
     props.discountPrice !== null &&
@@ -27,7 +26,7 @@ const hasDiscount = computed(() => {
 
 <template>
   <div
-    class="group bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden max-w-[220px] w-full mx-auto"
+    class="group bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden max-w-[240px] w-full mx-auto"
     @click="navigateDetail(id)"
   >
     <div
@@ -46,26 +45,29 @@ const hasDiscount = computed(() => {
       >
         {{ description }}
       </h3>
-
-      <div class="flex flex-col items-end w-full mt-auto">
-        <div
-          v-if="hasDiscount"
-          class="flex items-baseline gap-1.5"
-        >
-          <span
-            class="text-[11px] text-gray-400 line-through decoration-gray-300"
-          >
-            ${{ price.toLocaleString() }}
-          </span>
-          <span class="text-lg font-bold text-red-500">
-            ${{ discountPrice?.toLocaleString() }}
-          </span>
+      <div class="flex flex-1 flex-row w-full">
+        <div class="flex flex-1">
+          <slot name="edit" />
         </div>
 
-        <div v-else>
-          <span class="text-lg font-bold text-gray-800">
-            ${{ price.toLocaleString() }}
-          </span>
+        <div class="flex flex-col items-end mt-auto">
+          <div
+            v-if="hasDiscount"
+            class="flex items-baseline gap-1.5"
+          >
+            <span
+              class="text-[11px] text-gray-400 line-through decoration-gray-300"
+            >
+              ${{ price }}
+            </span>
+            <span class="text-lg font-bold text-red-500">
+              ${{ discountPrice }}
+            </span>
+          </div>
+
+          <div v-else>
+            <span class="text-lg font-bold text-gray-800"> ${{ price }} </span>
+          </div>
         </div>
       </div>
     </div>
