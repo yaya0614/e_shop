@@ -3,8 +3,8 @@ import { Toaster } from 'vue-sonner';
 </script>
 
 <template>
-  <NuxtLayout name="header-all">
+  <div class="flex flex-col w-screen h-screen max-h-screen overflow-hidden">
     <Toaster />
     <NuxtPage />
-  </NuxtLayout>
+  </div>
 </template>
