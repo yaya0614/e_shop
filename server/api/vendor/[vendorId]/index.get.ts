@@ -7,25 +7,9 @@ extendZodWithOpenApi(z);
 
 const responseSchema = z
   .object({
-    id: z.string().openapi({
-      description: 'Vendor ID',
-      example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
-    }),
-    name: z.string().openapi({
-      description: 'Vendor name',
-      example: 'NTUT Store',
-    }),
-    phone: z.string().openapi({
-      description: 'Vendor phone',
-      example: '0912345678',
-    }),
-    email: z.string().openapi({
-      description: 'Vendor email',
-      example: 'ntut@store.com',
-    }),
-    address: z.string().openapi({
-      description: 'Vendor address',
-      example: '123, NTUT Road, Taipei, Taiwan',
+    status: z.string().openapi({
+      description: 'Status',
+      example: 'success',
     }),
   })
   .openapi('GetVendorResponse');
@@ -34,7 +18,7 @@ registry.registerPath({
   method: 'get',
   tags: ['Vendor'],
   path: 'api/vendor/{vendorId}',
-  summary: 'Get Vendor Detail 🔒',
+  summary: 'Exchange Vendor Token 🔒',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -46,7 +30,7 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Get vendor by ID successfully',
+      description: 'Exchange Vendor Token Successfully',
       content: {
         'application/json': {
           schema: responseSchema,
@@ -130,7 +114,6 @@ export default defineEventHandler(async (event) => {
   });
 
   return {
-    ...vendor,
-    role: employee.role,
+    status: 'success',
   };
 });
