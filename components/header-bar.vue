@@ -63,7 +63,7 @@ async function logout() {
         </span>
         <Button
           variant="link"
-          @click="go('/profile/overview')"
+          @click="go('/user/profile/overview')"
         >
           會員中心
         </Button>

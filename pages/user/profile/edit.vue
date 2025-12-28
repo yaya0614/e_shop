@@ -73,7 +73,7 @@ const handleSubmit = async () => {
     successMessage.value = '個人檔案已成功更新！即將返回概覽頁面。';
 
     setTimeout(() => {
-      router.push('/profile/overview');
+      router.push('/user/profile/overview');
     }, 1500);
   } catch (err: unknown) {
     const error = err as Error;
@@ -84,7 +84,7 @@ const handleSubmit = async () => {
 };
 
 const handleCancel = () => {
-  router.push('/profile/overview');
+  router.push('/user/profile/overview');
 };
 </script>
 
