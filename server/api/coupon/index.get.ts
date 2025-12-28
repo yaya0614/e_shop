@@ -96,6 +96,7 @@ export default defineEventHandler(async (event) => {
       minPrice: true,
       used: true,
       code: true,
+      id: true,
     },
   });
 
