@@ -272,15 +272,16 @@ export default defineEventHandler(async (event) => {
       },
     });
   });
-
-  await prisma.coupon.update({
-    where: {
-      id: payload.data.couponId,
-    },
-    data: {
-      used: true,
-    },
-  });
+  if (payload.data.couponId && payload.data.couponId !== '') {
+    await prisma.coupon.update({
+      where: {
+        id: payload.data.couponId,
+      },
+      data: {
+        used: true,
+      },
+    });
+  }
 
   return {
     status: 'success',

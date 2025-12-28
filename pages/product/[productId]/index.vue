@@ -145,7 +145,23 @@ const handleAddToCart = async () => {
     toast.error('加入購物車失敗');
   }
 };
+/* -----------------------------
+ * 直接購買邏輯：不經過購物車 API
+ * 直接把商品資訊帶到結帳頁
+ * ----------------------------- */
+const handleBuyNow = () => {
+  if (!product.value || product.value.quantity <= 0) return;
 
+  // 導向結帳頁面，並帶上立即購買的參數
+  router.push({
+    path: '/checkout',
+    query: {
+      buyNow: 'true',
+      productId: product.value.id,
+      quantity: selectedQuantity.value,
+    },
+  });
+};
 const goToDetail = (id: string) => {
   router.push({
     name: 'product-productId',
@@ -243,6 +259,7 @@ const goToDetail = (id: string) => {
                 : 'bg-gray-600'
             "
             :disabled="product.quantity <= 0"
+            @click="handleBuyNow"
           >
             {{ product.quantity > 0 ? '直接購買' : '補貨中' }}
           </Button>
