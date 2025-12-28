@@ -121,6 +121,7 @@ export default defineEventHandler(async (event) => {
     select: {
       id: true,
       price: true,
+      discountPrice: true,
       quantity: true,
       vendorId: true,
     },
@@ -162,7 +163,8 @@ export default defineEventHandler(async (event) => {
 
   let price = products.reduce((total, product) => {
     const quantity = quantityByProductId.get(product.id) ?? 0;
-    return total + product.price * quantity;
+    const productPrice = product.discountPrice ?? product.price;
+    return total + productPrice * quantity;
   }, 0);
 
   if (payload.data.couponId) {
@@ -269,6 +271,15 @@ export default defineEventHandler(async (event) => {
         message: `User created order ${order.id} with ${payload.data.products.length} products`,
       },
     });
+  });
+
+  await prisma.coupon.update({
+    where: {
+      id: payload.data.couponId,
+    },
+    data: {
+      used: true,
+    },
   });
 
   return {

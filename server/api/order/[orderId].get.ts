@@ -149,6 +149,7 @@ export default defineEventHandler(async (event) => {
               name: true,
               description: true,
               price: true,
+              discountPrice: true,
               coverId: true,
             },
           },
@@ -176,6 +177,15 @@ export default defineEventHandler(async (event) => {
       id: orderdetail.vendorId,
       name: orderdetail.vendor.name,
     },
-    products: orderdetail.products,
+    products: orderdetail.products.map((orderProduct) => ({
+      quantity: orderProduct.quantity,
+      product: {
+        id: orderProduct.product.id,
+        name: orderProduct.product.name,
+        description: orderProduct.product.description,
+        price: orderProduct.product.discountPrice ?? orderProduct.product.price,
+        coverId: orderProduct.product.coverId,
+      },
+    })),
   };
 });
