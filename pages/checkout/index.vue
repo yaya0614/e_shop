@@ -17,7 +17,13 @@ interface OrderProduct {
     coverId?: string;
   };
 }
-
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  discountPrice?: number;
+  coverId?: string;
+}
 interface Coupon {
   id: string;
   code: string;
@@ -27,10 +33,7 @@ interface Coupon {
   maxPrice?: number;
   minPrice?: number;
 }
-
-/* =====================
- * State 狀態管理
- * ===================== */
+const route = useRoute();
 const orderProducts = ref<OrderProduct[]>([]);
 const availableCoupons = ref<Coupon[]>([]);
 const isProcessing = ref(false);
@@ -78,6 +81,33 @@ const discountAmount = computed(() => {
 
 // 載入購物車
 const loadCartData = async () => {
+  // 檢查是否為「立即購買」模式
+  if (route.query.buyNow === 'true' && route.query.productId) {
+    try {
+      // 呼叫單一商品資訊 API (通常你已經有這個 API 了)
+      const data = await $fetch<Product>(
+        `/api/product/${route.query.productId}`,
+      );
+
+      // 將資料格式化為跟購物車一樣的 Array 結構
+      orderProducts.value = [
+        {
+          id: 'buy-now-temp',
+          quantity: Number(route.query.quantity) || 1,
+          product: {
+            id: data.id,
+            name: data.name,
+            price: data.price,
+            discountPrice: data.discountPrice,
+            coverId: data.coverId,
+          },
+        },
+      ];
+      return; // 跳過載入購物車 API
+    } catch (error) {
+      if (error instanceof FetchError) toast.error('讀取商品資料失敗');
+    }
+  }
   try {
     const data = await $fetch<{ cartItems: OrderProduct[] }>('/api/cart', {
       method: 'GET',
