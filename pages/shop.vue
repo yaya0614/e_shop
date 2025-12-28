@@ -12,7 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
+const router = useRouter();
+function go(path: string) {
+  router.push(path);
+}
 // 1. 定義型別與介面
 interface CartProduct {
   id: string;
@@ -66,7 +69,6 @@ const updateQuantity = async (
   item: CartItem,
   newQuantity: number,
 ): Promise<void> => {
-  // 如果新數量 <= 0，觸發 Alert Dialog 詢問是否刪除
   if (newQuantity <= 0) {
     itemToDelete.value = item;
     isDeleteDialogOpen.value = true;
@@ -140,9 +142,7 @@ const handleInputChange = (item: CartItem, event: Event) => {
   if (isNaN(value)) {
     updateQuantity(item, 1);
   } else if (value < 1) {
-    // 依需求：輸入小於 1 顯示錯誤訊息
     toast.error('輸入錯誤的值（數量必須大於或等於 1）');
-    // 強制將輸入框顯示回復為目前的正確數量
     input.value = item.quantity.toString();
   } else {
     updateQuantity(item, value);
@@ -169,9 +169,9 @@ onMounted(() => {
     <div class="flex flex-col w-full flex-1 px-10">
       <h1 class="text-3xl font-bold mb-6 mt-4">我的購物車</h1>
 
-      <div class="border rounded-lg shadow-md overflow-hidden bg-white">
+      <div class="border rounded-lg shadow-md bg-white">
         <div
-          class="grid grid-cols-[3.5fr_1fr_1fr_1.2fr_1fr_1fr] text-sm font-semibold text-gray-700 bg-gray-200 border-b"
+          class="grid grid-cols-[4fr_1fr_1.2fr_1.2fr_1fr_1fr] text-sm font-semibold text-gray-700 bg-gray-200 border-b rounded-t-lg"
         >
           <div class="p-3 text-center">商品明細</div>
           <div class="p-3 text-center border-l">單價</div>
@@ -192,7 +192,7 @@ onMounted(() => {
           <div
             v-for="item in cartItems"
             :key="item.id"
-            class="grid grid-cols-[3.5fr_1fr_1fr_1.2fr_1fr_1fr] items-center border-b hover:bg-gray-50 transition-colors"
+            class="grid grid-cols-[4fr_1fr_1.2fr_1.2fr_1fr_1fr] items-center border-b last:border-b-0 hover:bg-gray-50 transition-colors"
           >
             <div class="p-3 flex items-center">
               <img
@@ -201,7 +201,7 @@ onMounted(() => {
                     ? `/api/image/${item.product.coverId}`
                     : 'https://picsum.photos/200/200'
                 "
-                class="w-16 h-16 object-cover rounded mr-4 bg-gray-100"
+                class="w-16 h-16 object-cover rounded mr-4 bg-gray-100 flex-shrink-0"
               />
               <span class="font-medium text-sm text-gray-800 line-clamp-2">{{
                 item.product.name
@@ -287,6 +287,7 @@ onMounted(() => {
       >
         <button
           class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 shadow-md transition-all active:scale-95 cursor-pointer"
+          @click="go('/checkout')"
         >
           前往結帳
         </button>
