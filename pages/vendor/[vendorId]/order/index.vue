@@ -36,6 +36,7 @@ const fetchOrders = async () => {
     `/api/vendor/${vendorId}/order`,
     {
       method: 'GET',
+      credentials: 'include',
     },
   );
 
@@ -61,7 +62,7 @@ fetchOrders();
       {{ error }}
     </div>
 
-    <div class="flex-[3] min-h-0 mb-10">
+    <div class="flex-3 min-h-0 mb-10">
       <order-model
         :orders="previewOrders"
         :vendor-id="vendorId"

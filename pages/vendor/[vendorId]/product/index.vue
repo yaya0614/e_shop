@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
 import cardModel from '~/components/card-model.vue';
 
 definePageMeta({
@@ -19,8 +18,8 @@ interface Product {
 }
 
 const router = useRouter();
-const route = useRoute();
-const vendorId = route.params.vendorId as string;
+const route = useRoute('vendor-vendorId-product-productId');
+const vendorId = route.params.vendorId;
 
 const selectedFilter = ref('');
 
@@ -56,7 +55,12 @@ const goToDetail = (productId: string) => {
 
       <button
         class="flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
-        @click="router.push(`/vendor/${vendorId}/product-create`)"
+        @click="
+          router.push({
+            name: 'vendor-vendorId-product-product-create',
+            params: { vendorId },
+          })
+        "
       >
         新增商品
       </button>

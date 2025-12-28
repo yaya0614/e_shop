@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 
 definePageMeta({
   layout: 'vendor-bar',
 });
 
-const route = useRoute();
+const route = useRoute('vendor-vendorId-product-productId');
 const router = useRouter();
 
-const vendorId = route.params.vendorId as string;
-const productId = route.params.productId as string;
+const vendorId = route.params.vendorId;
+const productId = route.params.productId;
 
 const form = ref({
   productName: '',
@@ -71,6 +70,7 @@ const updateStatus = async (status: 'ACTIVE' | 'INACTIVE') => {
       productId: productId,
       productStatus: status,
     },
+    credentials: 'include',
   });
 
   const product = await $fetch(`/api/product/${productId}`);
@@ -88,11 +88,19 @@ const deleteProduct = async () => {
   errorMessage.value = null;
   successMessage.value = null;
 
-  await $fetch(`/api/vendor/${vendorId}/product/${productId}`, {
-    method: 'DELETE',
-  });
+  try {
+    await $fetch(`/api/vendor/${vendorId}/product`, {
+      method: 'DELETE',
+      body: {
+        productId: productId,
+      },
+      credentials: 'include',
+    });
 
-  successMessage.value = '商品已成功刪除';
+    successMessage.value = '商品已成功刪除';
+  } catch (error) {
+    errorMessage.value = '刪除商品失敗' + error;
+  }
 
   // 刪除成功後返回商品列表頁（依你的路由結構自行調整）
   setTimeout(() => {

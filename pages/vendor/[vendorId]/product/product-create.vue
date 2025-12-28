@@ -50,6 +50,7 @@ const onSubmit = async () => {
       quantity: quantity.value,
       coverId: coverId.value,
     },
+    credentials: 'include',
   });
 
   alert('商品新增成功');

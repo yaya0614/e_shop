@@ -5,6 +5,13 @@ import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
+const schema = z.object({
+  productId: z.string().openapi({
+    description: 'Product ID',
+    example: '1234567890',
+  }),
+});
+
 const schemaResponses = z.object({
   status: z.literal('deleted successfully').openapi({
     description: 'Product is deleted successfully',
@@ -21,8 +28,14 @@ registry.registerPath({
   request: {
     params: z.object({
       vendorId: z.string().openapi({}),
-      productId: z.string().openapi({}),
     }),
+    body: {
+      content: {
+        'application/json': {
+          schema: schema,
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -58,14 +71,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const vendorId = getRouterParam(event, 'vendorId');
-  const productId = getRouterParam(event, 'productId');
+  const payload = await readValidatedBody(event, schema.safeParse);
+  if (!payload.success) {
+    throw createError({
+      statusCode: 400,
+      message: 'Bad Request',
+    });
+  }
   if (!vendorId) {
     throw createError({
       statusCode: 400,
       message: 'Vendor ID is required',
     });
   }
-  if (!productId) {
+  if (!payload.data.productId) {
     throw createError({
       statusCode: 400,
       message: 'Product ID is required',
@@ -79,7 +98,7 @@ export default defineEventHandler(async (event) => {
   }
   const product = await prisma.product.findUnique({
     where: {
-      id: productId,
+      id: payload.data.productId,
       vendorId: vendorId,
     },
   });
@@ -94,7 +113,7 @@ export default defineEventHandler(async (event) => {
   await prisma.$transaction(async (tx) => {
     await tx.product.update({
       where: {
-        id: productId,
+        id: payload.data.productId,
         vendorId: vendorId,
       },
       data: {
@@ -111,7 +130,7 @@ export default defineEventHandler(async (event) => {
 
     await tx.productLog.create({
       data: {
-        productId: productId,
+        productId: payload.data.productId,
         logId: log.id,
       },
     });

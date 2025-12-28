@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
-
 definePageMeta({
   layout: 'vendor-bar',
 });
-const route = useRoute();
-const orderId = route.params.orderId as string;
+
+const router = useRouter();
+const route = useRoute('vendor-vendorId-order-orderId');
+const orderId = route.params.orderId;
+
 export interface OrderDetail {
   id: string;
   price: number;
@@ -37,10 +38,13 @@ export interface OrderDetail {
 }
 
 const goBack = () => {
-  useRouter().back();
+  router.back();
 };
 const { data: order, pending } = await useFetch<OrderDetail>(
   `/api/order/${orderId}`,
+  {
+    credentials: 'include',
+  },
 );
 </script>
 
