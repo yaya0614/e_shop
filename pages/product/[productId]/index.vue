@@ -138,7 +138,12 @@ const handleAddToCart = async () => {
     }
 
     if (error instanceof FetchError && error.statusCode === 401) {
-      toast.error('請先登入');
+      toast.success('您尚未登入或登入已過期，請重新登入', {
+        action: {
+          label: '前往登入',
+          onClick: () => navigateTo('/auth/login'),
+        },
+      });
       return;
     }
 
@@ -149,18 +154,38 @@ const handleAddToCart = async () => {
  * 直接購買邏輯：不經過購物車 API
  * 直接把商品資訊帶到結帳頁
  * ----------------------------- */
-const handleBuyNow = () => {
+const handleBuyNow = async () => {
   if (!product.value || product.value.quantity <= 0) return;
 
-  // 導向結帳頁面，並帶上立即購買的參數
-  router.push({
-    path: '/checkout',
-    query: {
-      buyNow: 'true',
-      productId: product.value.id,
-      quantity: selectedQuantity.value,
-    },
-  });
+  try {
+    // 帶入一支需要權限的 API 測試 Token 是否有效
+    await $fetch('/api/coupon', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    // 如果沒有報錯，代表登入有效，執行導向
+    router.push({
+      path: '/checkout',
+      query: {
+        buyNow: 'true',
+        productId: product.value.id,
+        quantity: selectedQuantity.value,
+      },
+    });
+  } catch (error) {
+    // 如果報錯且狀態碼為 401
+    if (error instanceof FetchError && error.statusCode === 401) {
+      toast.success('您尚未登入或登入已過期，請重新登入', {
+        action: {
+          label: '前往登入',
+          onClick: () => navigateTo('/auth/login'),
+        },
+      });
+    } else {
+      toast.error('系統忙碌中，請稍後再試');
+    }
+  }
 };
 const goToDetail = (id: string) => {
   router.push({
