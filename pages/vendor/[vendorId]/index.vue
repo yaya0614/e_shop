@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
-import chartModel from '~/components/chart-model.vue';
+import { computed, ref } from 'vue';
 import orderModel from '~/components/order-model.vue';
+import ChartModel from '~/components/chart-model.vue';
 
 definePageMeta({
   layout: 'vendor-bar',
@@ -95,7 +96,80 @@ const exportReport = () => {
     alert('請選擇月份');
     return;
   }
+  const url = `/api/vendor/${vendorId}/revenue?specificMonth=${selectedMonth.value}`;
+  window.open(url, '_blank');
 };
+
+export interface PreviewOrder {
+  orderId: string;
+  price: number;
+  status: 'RECEIVED' | 'PROCESSING' | 'TRANSPORT' | 'FINISH' | 'CANCELED';
+  userName: string;
+  products: {
+    productId: string;
+    quantity: number;
+  }[];
+}
+
+export interface ApiMonthStat {
+  month: string;
+  totalPrice: number;
+}
+
+export interface VendorDashboardResponse {
+  previewOrders: PreviewOrder[];
+  monthPrice: ApiMonthStat[];
+}
+
+export interface YearChartPoint {
+  date: Date;
+  value: number;
+}
+
+const MONTH_INDEX_MAP: Record<string, number> = {
+  Jan: 0,
+  Feb: 1,
+  Mar: 2,
+  Apr: 3,
+  May: 4,
+  Jun: 5,
+  Jul: 6,
+  Aug: 7,
+  Sep: 8,
+  Oct: 9,
+  Nov: 10,
+  Dec: 11,
+};
+
+function mapMonthStatsToChart(
+  stats: ApiMonthStat[],
+  year = new Date().getFullYear(),
+): YearChartPoint[] {
+  if (!stats || stats.length === 0) return [];
+  return stats.map((item) => ({
+    date: new Date(year, MONTH_INDEX_MAP[item.month]),
+    value: item.totalPrice ?? 0,
+  }));
+}
+
+const { data: dashboard } = await useFetch<VendorDashboardResponse>(
+  () => `/api/vendor/${vendorId}/dashboard`,
+  {
+    method: 'GET',
+    credentials: 'include',
+    lazy: true,
+    default: () => null,
+  },
+);
+
+const chartData = computed<YearChartPoint[]>(() => {
+  if (!dashboard.value) return [];
+  return mapMonthStatsToChart(dashboard.value.monthPrice);
+});
+
+const previewOrders = computed(() => {
+  return dashboard.value?.previewOrders ?? [];
+});
 
 onMounted(() => {
   initVendorDashboard();
@@ -110,7 +184,10 @@ onMounted(() => {
         <div class="basis-4/5">
           <div class="w-full aspect-video">
             <ClientOnly>
-              <chartModel class="w-full h-full" />
+              <ChartModel
+                class="w-full h-full"
+                :data="chartData"
+              />
             </ClientOnly>
           </div>
         </div>
@@ -163,10 +240,18 @@ onMounted(() => {
     <h1 class="text-xl font-semibold mt-10 mb-4 shrink-0">近期訂單</h1>
 
     <div class="flex h-fit w-full flex-col">
-      <order-model class="w-full" />
+      <OrderModel
+        class="w-full"
+        :vendor-id="vendorId"
+        :orders="previewOrders"
+      />
     </div>
     <div class="flex h-fit w-full flex-col opacity-0">
-      <order-model class="w-full" />
+      <order-model
+        class="w-full"
+        :vendor-id="vendorId"
+        :orders="previewOrders"
+      />
     </div>
   </div>
 </template>
