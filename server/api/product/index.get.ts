@@ -2,7 +2,6 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import { prisma } from '~/lib/prisma';
 import type { Prisma } from '~/prisma/generated/client';
-import type { AuthContextPayload } from '~/types/auth';
 
 extendZodWithOpenApi(z);
 
@@ -93,20 +92,6 @@ registry.registerPath({
 });
 
 export default defineEventHandler(async (event) => {
-  const auth: AuthContextPayload = event.context.auth;
-  if (!auth.authenticated) {
-    throw createError({
-      statusCode: 401,
-      message: 'Unauthorized',
-    });
-  }
-  if (!auth.userId) {
-    throw createError({
-      statusCode: 401,
-      message: 'Unauthorized',
-    });
-  }
-
   const query = getQuery(event);
   const queryResult = schema.safeParse(query);
 
