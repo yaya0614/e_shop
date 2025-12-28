@@ -12,7 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
+const router = useRouter();
+function go(path: string) {
+  router.push(path);
+}
 // 1. 定義型別與介面
 interface CartProduct {
   id: string;
@@ -287,6 +290,7 @@ onMounted(() => {
       >
         <button
           class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 shadow-md transition-all active:scale-95 cursor-pointer"
+          @click="go('/checkout')"
         >
           前往結帳
         </button>
