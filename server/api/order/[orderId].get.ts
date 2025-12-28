@@ -19,6 +19,10 @@ const responseSchema = z
       description: 'Order ID',
       example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
     }),
+    userName: z.string().openapi({
+      description: 'Name of the user who placed the order',
+      example: 'John Doe',
+    }),
     vendor: z.object({
       id: z.string().openapi({
         description: 'Vendor ID',
@@ -135,6 +139,11 @@ export default defineEventHandler(async (event) => {
       userId,
     },
     include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
       vendor: {
         select: {
           name: true,
@@ -169,6 +178,7 @@ export default defineEventHandler(async (event) => {
     id: orderdetail.id,
     price: orderdetail.price,
     status: orderdetail.status,
+    userName: orderdetail.user.name,
     createdAt: orderdetail.createdAt,
     updatedAt: orderdetail.updatedAt,
     userId: orderdetail.userId,
