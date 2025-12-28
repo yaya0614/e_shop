@@ -2,19 +2,49 @@
 import headerBar from '~/components/header-bar.vue';
 import { SearchIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
-
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 
-const category_name = [
-  { id: 1, title: '商業理財' },
-  { id: 2, title: '心理勵志' },
-  { id: 3, title: '文學故事' },
-  { id: 4, title: '人文社會' },
-  { id: 5, title: '醫療保健' },
-  { id: 6, title: '生活風格' },
-  { id: 7, title: '宗教命理' },
-];
+interface SubCategory {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  subCategories: SubCategory[];
+}
+
+const router = useRouter();
+
+const { data: categoriesData } = await useFetch<{ categories: Category[] }>(
+  '/api/category',
+  {
+    method: 'GET',
+  },
+);
+const search = ref('');
+
+const searchProduct = (text: string) => {
+  search.value = text;
+
+  if (text.trim().length === 0) {
+    router.push({
+      path: '/',
+    });
+    return;
+  }
+
+  router.push({
+    path: '/',
+    query: {
+      search: text,
+    },
+  });
+};
+
+const categories = computed(() => categoriesData.value?.categories || []);
 </script>
 
 <template>
@@ -23,10 +53,15 @@ const category_name = [
     <div class="flex flex-row justify-between w-full mt-4">
       <p class="text-muted-foreground text-4xl leading-tight ml-10 flex-1"></p>
       <ButtonGroup class="mr-10 flex-1 text-3xl">
-        <Input placeholder="Search..." />
+        <Input
+          v-model="search"
+          placeholder="Search..."
+          @keydown.enter="searchProduct(search)"
+        />
         <Button
           variant="outline"
           aria-label="Search"
+          @click="searchProduct(search)"
         >
           <SearchIcon />
         </Button>
@@ -35,22 +70,42 @@ const category_name = [
     <div class="flex justify-center-safe mt-2 mb-2">
       <NavigationMenu
         :viewport="false"
-        class="w-full"
+        class="w-full flex flex-wrap"
       >
-        <div class="z-4">
-          <NavigationMenuList class="gap-12">
-            <div
-              v-for="value in category_name"
-              :key="value.id"
-            >
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>
-                  {{ value.title }}
-                </NavigationMenuTrigger>
-              </NavigationMenuItem>
-            </div>
-          </NavigationMenuList>
-        </div>
+        <NavigationMenuList class="gap-8">
+          <NavigationMenuItem
+            v-for="category in categories"
+            :key="category.id"
+          >
+            <NavigationMenuTrigger>
+              {{ category.name }}
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul class="w-full gap-3 p-4 min-w-32">
+                <div
+                  v-for="subCategory in category.subCategories"
+                  :key="subCategory.id"
+                  class="w-full"
+                >
+                  <Button
+                    variant="ghost"
+                    class="text-sm font-medium leading-none w-full"
+                    @click="searchProduct(subCategory.name)"
+                  >
+                    {{ subCategory.name }}
+                  </Button>
+                </div>
+                <li v-if="category.subCategories.length === 0">
+                  <div
+                    class="select-none space-y-1 rounded-md p-3 leading-none text-sm text-muted-foreground"
+                  >
+                    暫無子分類
+                  </div>
+                </li>
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
       </NavigationMenu>
     </div>
     <div class="flex-1 flex w-full overflow-y-scroll">
