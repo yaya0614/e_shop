@@ -76,7 +76,6 @@
               >搜尋</Button
             >
           </div>
-
           <div
             v-if="foundVendor"
             class="bg-white p-4 rounded-lg border border-blue-200 animate-in fade-in"
@@ -126,33 +125,31 @@
           <h3 class="font-bold mb-4 text-gray-800">填寫新商家註冊資訊</h3>
           <div class="grid grid-cols-1 gap-5">
             <div class="space-y-2">
-              <label class="text-sm font-medium flex items-center gap-1">
-                商家名稱 <span class="text-red-500">*</span>
-              </label>
+              <label class="text-sm font-medium flex items-center gap-1"
+                >商家名稱 <span class="text-red-500">*</span></label
+              >
               <Input
                 v-model="newVendor.name"
-                placeholder="請輸入商家名稱"
+                placeholder="請輸入商家正式名稱"
               />
             </div>
-
             <div class="space-y-2">
-              <label class="text-sm font-medium flex items-center gap-1">
-                聯絡電話 <span class="text-red-500">*</span>
-              </label>
+              <label class="text-sm font-medium flex items-center gap-1"
+                >聯絡電話 <span class="text-red-500">*</span></label
+              >
               <Input
                 v-model="newVendor.phone"
-                placeholder="聯絡電話"
+                placeholder="例如：0912345678"
               />
             </div>
-
             <div class="space-y-2">
-              <label class="text-sm font-medium flex items-center gap-1">
-                商家 Email <span class="text-red-500">*</span>
-              </label>
+              <label class="text-sm font-medium flex items-center gap-1"
+                >商家 Email <span class="text-red-500">*</span></label
+              >
               <Input
                 v-model="newVendor.email"
                 type="email"
-                placeholder="商家 Email"
+                placeholder="例如：contact@shop.com"
               />
               <p
                 v-if="newVendor.email && !isEmailValid"
@@ -161,19 +158,17 @@
                 請輸入有效的 Email 格式
               </p>
             </div>
-
             <div class="space-y-2">
-              <label class="text-sm font-medium flex items-center gap-1">
-                商家地址 <span class="text-red-500">*</span>
-              </label>
+              <label class="text-sm font-medium flex items-center gap-1"
+                >商家地址 <span class="text-red-500">*</span></label
+              >
               <textarea
                 v-model="newVendor.address"
-                placeholder="商家地址"
+                placeholder="請輸入商家的完整地址"
                 class="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 rows="3"
               ></textarea>
             </div>
-
             <div class="pt-2">
               <Button
                 class="w-full"
@@ -186,7 +181,7 @@
                 v-if="!isFormValid"
                 class="text-[10px] text-center mt-2 text-gray-400"
               >
-                請填寫所有帶有 * 的必填欄位並確保 Email 格式正確
+                請填寫所有必填欄位並確保 Email 格式正確
               </p>
             </div>
           </div>
@@ -209,23 +204,27 @@
         class="space-y-3"
       >
         <div
-          v-for="v in vendors"
+          v-for="v in vendors as any[]"
           :key="v.id"
           class="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50 group transition-all"
         >
           <div>
             <h4 class="font-bold text-gray-800">{{ v.name }}</h4>
             <div
-              class="flex gap-2 text-xs mt-1 text-muted-foreground uppercase"
+              class="flex flex-wrap gap-2 text-xs mt-1 text-muted-foreground uppercase items-center"
             >
               <Badge variant="secondary">{{ v.role }}</Badge>
+              <Badge :variant="getStatusVariant(v.status)">
+                {{ getStatusText(v.status) }}
+              </Badge>
               <span>{{ v.email }}</span>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            class="opacity-0 group-hover:opacity-100 transition-opacity"
+            :disabled="v.status !== 'ACTIVE'"
+            class="opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
             @click="enterDashboard(v.id)"
           >
             進入後台
@@ -266,14 +265,28 @@ const foundVendor = ref<VendorInfo | null>(null);
 const selectedRole = ref<EmployeeRole>('CLERK');
 const newVendor = ref({ name: '', phone: '', email: '', address: '' });
 
-// 💡 必填驗證邏輯
+// 💡 狀態映射邏輯 (根據 MiiiYang 的要求)
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    ACTIVE: '可用',
+    PENDING: '等待審查',
+    INACTIVE: '不可用',
+  };
+  return map[status] || status;
+};
+
+const getStatusVariant = (status: string) => {
+  if (status === 'ACTIVE') return 'default';
+  if (status === 'PENDING') return 'outline';
+  return 'destructive';
+};
+
 const isEmailValid = computed(() => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(newVendor.value.email);
 });
 
 const isFormValid = computed(() => {
-  // 修復 lint 錯誤：移除未使用的 email 解構
   const { name, phone, address } = newVendor.value;
   return (
     name.trim() !== '' &&
@@ -305,20 +318,10 @@ const handleSearch = async () => {
       },
     );
   } catch (e: unknown) {
-    const err = e as {
-      statusCode?: number;
-      message?: string;
-      data?: { message?: string };
-    };
-    if (err.statusCode === 403) {
-      toast.error('無法查看商家資訊', {
-        description: '權限不足，請聯繫後端確認 API 權限設定。',
-      });
-    } else {
-      toast.error('搜尋失敗', {
-        description: err.data?.message || '找不到該商家 ID',
-      });
-    }
+    const err = e as { statusCode?: number; data?: { message?: string } };
+    toast.error('搜尋失敗', {
+      description: err.data?.message || '找不到該商家 ID',
+    });
   } finally {
     isSearching.value = false;
   }
@@ -344,6 +347,7 @@ const handleCreate = async () => {
   if (ok) {
     activeView.value = 'none';
     newVendor.value = { name: '', phone: '', email: '', address: '' };
+    await fetchVendors();
   }
 };
 
