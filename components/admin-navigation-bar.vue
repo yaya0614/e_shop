@@ -6,6 +6,7 @@ interface MenuItem {
   path?: string;
 
   danger?: boolean;
+  onClick?: () => void;
 }
 
 const router = useRouter();
@@ -21,6 +22,9 @@ const bottomMenu: MenuItem[] = [
   {
     label: 'Logout',
     danger: true,
+    onClick: () => {
+      router.push('/');
+    },
   },
 ];
 
@@ -65,7 +69,7 @@ const isActive = (path?: string): boolean => {
             : 'text-gray-600 hover:bg-green-50 hover:text-green-600',
           isActive(item.path) ? 'bg-green-100 text-green-600 font-medium' : '',
         ]"
-        @click="router.push(item.path!)"
+        @click="item.onClick"
       >
         <span>{{ item.label }}</span>
       </button>

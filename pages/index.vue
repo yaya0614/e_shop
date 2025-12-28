@@ -25,6 +25,7 @@ interface Product {
 }
 
 const router = useRouter();
+const route = useRoute();
 
 type SortFilter = '' | 'NEWEST' | 'OLDEST' | 'PRICE_LOW' | 'PRICE_HIGH';
 
@@ -44,9 +45,14 @@ const {
   query: computed(() => ({
     page: currentPage.value,
     limit,
-    Filter: selectedFilter.value || undefined, // 預設不傳
+    Filter: selectedFilter.value || undefined,
+    keyword: route.query.search
+      ? String(route.query.search).trim().length > 0
+        ? String(route.query.search).trim()
+        : undefined
+      : undefined,
   })),
-  watch: [currentPage, selectedFilter],
+  watch: [currentPage, selectedFilter, () => route.query.search],
 });
 
 const goToDetail = (id: string) => {
@@ -61,7 +67,7 @@ const goToDetail = (id: string) => {
   <NuxtLayout name="header-all">
     <div class="flex flex-col w-full flex-1">
       <!-- 排序選單 -->
-      <div class="w-full flex justify-end pr-10 mt-4">
+      <div class="w-full flex justify-end pr-10 mt-2">
         <select
           v-model="selectedFilter"
           class="w-56 border rounded-lg p-2 text-sm bg-white"
