@@ -2,6 +2,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { prisma } from '~/lib/prisma';
 import type { AuthContextPayload } from '~/types/auth';
 import { z } from 'zod';
+import { VendorStatus } from '~/prisma/generated/enums';
 
 extendZodWithOpenApi(z);
 
@@ -28,6 +29,10 @@ const responseSchema = z
         address: z.string().openapi({
           description: 'Vendor address',
           example: '123, NTUT Road, Taipei, Taiwan',
+        }),
+        status: z.enum(VendorStatus).openapi({
+          description: 'Vendor status',
+          example: 'ACTIVE',
         }),
       }),
     ),
@@ -85,6 +90,7 @@ export default defineEventHandler(async (event) => {
           phone: true,
           email: true,
           address: true,
+          status: true,
         },
       },
     },
@@ -99,6 +105,7 @@ export default defineEventHandler(async (event) => {
         email: employee.vendor.email,
         address: employee.vendor.address,
         role: employee.role,
+        status: employee.vendor.status,
       };
     }),
   };
