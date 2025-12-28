@@ -16,8 +16,9 @@ function go(path: string) {
 
 // 登出功能
 async function logout() {
-  const token = useCookie('auth.token');
-  token.value = null; // 清除前端 Cookie
+  await $fetch('/api/auth/logout', {
+    method: 'POST',
+  });
 
   // 重置使用者狀態為初始值 (GUEST)
   userProfile.value = {

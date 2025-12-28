@@ -26,7 +26,7 @@ export default defineEventHandler((event) => {
     token = getCookie(event, 'auth.token') || null;
   }
 
-  if (!token) {
+  if (!token || token.trim() === '') {
     event.context.auth.error = {
       code: 401,
       message: 'Authorization is required',
