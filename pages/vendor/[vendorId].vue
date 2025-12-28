@@ -1,81 +1,13 @@
-<template>
-  <div class="max-w-4xl mx-auto mt-10 p-6">
-    <div class="flex items-center justify-between mb-8">
-      <Button
-        variant="ghost"
-        @click="handleBack"
-      >
-        ← 返回個人檔案
-      </Button>
-      <Badge
-        v-if="vendorInfo"
-        variant="secondary"
-        class="text-sm px-3 py-1"
-      >
-        身分：{{ vendorInfo.role }}
-      </Badge>
-    </div>
-
-    <div
-      v-if="loading"
-      class="flex flex-col items-center py-20"
-    >
-      <Spinner class="w-10 h-10 mb-4" />
-      <p class="text-muted-foreground animate-pulse">
-        正在切換至商家後台並驗證權限...
-      </p>
-    </div>
-
-    <div
-      v-else-if="vendorInfo"
-      class="space-y-6 animate-in fade-in"
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-3xl">{{ vendorInfo.name }}</CardTitle>
-          <p class="text-sm text-muted-foreground">商家 ID: {{ vendorId }}</p>
-        </CardHeader>
-        <CardContent>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div
-              v-for="item in vendorDetails"
-              :key="item.label"
-              class="p-4 bg-secondary/30 rounded-lg"
-            >
-              <p class="text-xs text-muted-foreground mb-1">{{ item.label }}</p>
-              <p class="font-medium text-sm">{{ item.value || '未提供' }}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card
-          v-for="nav in dashboardNav"
-          :key="nav.title"
-          class="cursor-pointer hover:shadow-md transition-shadow"
-        >
-          <CardHeader>
-            <CardTitle class="text-lg"
-              >{{ nav.icon }} {{ nav.title }}</CardTitle
-            >
-          </CardHeader>
-          <CardContent>
-            <p class="text-sm text-muted-foreground">{{ nav.desc }}</p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
 import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { Badge } from '~/components/ui/badge';
 import { Spinner } from '~/components/ui/spinner';
 import { useRoute } from 'vue-router';
+
+definePageMeta({
+  layout: 'header-all',
+});
 
 // 定義明確介面
 interface VendorDetail {
@@ -84,7 +16,6 @@ interface VendorDetail {
   phone: string;
   email: string;
   address: string;
-  role: string;
 }
 
 interface ApiError {
@@ -148,9 +79,14 @@ const initVendorDashboard = async () => {
   loading.value = true;
   try {
     // 根據 README 說明，調用此 API 觸發 Token Exchange
-    const data = await $fetch<VendorDetail>(`/api/vendor/${vendorId}`, {
+    await $fetch<VendorDetail>(`/api/vendor/${vendorId}`, {
       credentials: 'include', // 確保包含 Cookie 以進行身分驗證
     });
+
+    const data = await $fetch<VendorDetail>(`/api/vendor/${vendorId}/info`, {
+      credentials: 'include', // 確保包含 Cookie 以進行身分驗證
+    });
+
     vendorInfo.value = data;
     toast.success(`歡迎回來，${data.name} 管理員`);
   } catch (e: unknown) {
@@ -173,3 +109,67 @@ onMounted(() => {
   initVendorDashboard();
 });
 </script>
+
+<template>
+  <div class="flex flex-col h-screen px-8 py-8 mb-2 overflow-y-scroll w-screen">
+    <div class="flex items-center justify-between mb-8">
+      <Button
+        variant="ghost"
+        @click="handleBack"
+      >
+        ← 返回個人檔案
+      </Button>
+    </div>
+
+    <div
+      v-if="loading"
+      class="flex flex-col items-center py-20"
+    >
+      <Spinner class="w-10 h-10 mb-4" />
+      <p class="text-muted-foreground animate-pulse">
+        正在切換至商家後台並驗證權限...
+      </p>
+    </div>
+
+    <div
+      v-else-if="vendorInfo"
+      class="space-y-6 animate-in fade-in"
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-3xl">{{ vendorInfo.name }}</CardTitle>
+          <p class="text-sm text-muted-foreground">商家 ID: {{ vendorId }}</p>
+        </CardHeader>
+        <CardContent>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div
+              v-for="item in vendorDetails"
+              :key="item.label"
+              class="p-4 bg-secondary/30 rounded-lg"
+            >
+              <p class="text-xs text-muted-foreground mb-1">{{ item.label }}</p>
+              <p class="font-medium text-sm">{{ item.value || '未提供' }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card
+          v-for="nav in dashboardNav"
+          :key="nav.title"
+          class="cursor-pointer hover:shadow-md transition-shadow"
+        >
+          <CardHeader>
+            <CardTitle class="text-lg"
+              >{{ nav.icon }} {{ nav.title }}</CardTitle
+            >
+          </CardHeader>
+          <CardContent>
+            <p class="text-sm text-muted-foreground">{{ nav.desc }}</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </div>
+</template>

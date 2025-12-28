@@ -1,5 +1,96 @@
+<script setup lang="ts">
+import { useUser } from '~/lib/useUser';
+import { useVendor, type VendorInfo } from '~/lib/useVendor';
+import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Badge } from '~/components/ui/badge';
+import { Alert } from '~/components/ui/alert';
+import { Spinner } from '~/components/ui/spinner';
+import { useRouter } from 'vue-router';
+
+definePageMeta({
+  layout: 'header-all',
+});
+
+const router = useRouter();
+const { userProfile, isLoading, fetchUserProfile } = useUser();
+const {
+  vendors,
+  loading: vendorLoading,
+  fetchVendors,
+  createVendor,
+} = useVendor();
+
+const activeView = ref<'none' | 'create' | 'apply'>('none');
+
+const foundVendor = ref<VendorInfo | null>(null);
+const newVendor = ref({ name: '', phone: '', email: '', address: '' });
+
+// 💡 狀態映射邏輯 (根據 MiiiYang 的要求)
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    ACTIVE: '可用',
+    PENDING: '等待審查',
+    INACTIVE: '不可用',
+  };
+  return map[status] || status;
+};
+
+const getStatusVariant = (status: string) => {
+  if (status === 'ACTIVE') return 'default';
+  if (status === 'PENDING') return 'outline';
+  return 'destructive';
+};
+
+const isEmailValid = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(newVendor.value.email);
+});
+
+const isFormValid = computed(() => {
+  const { name, phone, address } = newVendor.value;
+  return (
+    name.trim() !== '' &&
+    phone.trim() !== '' &&
+    isEmailValid.value &&
+    address.trim() !== ''
+  );
+});
+
+const profileItems = computed(() => [
+  { label: '名稱', value: userProfile.value.name || '未設定' },
+  { label: 'Email', value: userProfile.value.email },
+]);
+
+const toggleView = (view: 'create') => {
+  activeView.value = activeView.value === view ? 'none' : view;
+  foundVendor.value = null;
+};
+
+const handleCreate = async () => {
+  if (!isFormValid.value) return;
+  const ok = await createVendor(newVendor.value);
+  if (ok) {
+    activeView.value = 'none';
+    newVendor.value = { name: '', phone: '', email: '', address: '' };
+    await fetchVendors();
+  }
+};
+
+const enterDashboard = (id: string) => {
+  router.push(`/vendor/${id}`);
+};
+
+onMounted(() => {
+  Promise.all([fetchUserProfile(), fetchVendors()]);
+});
+</script>
+
 <template>
-  <div class="max-w-2xl mx-auto mt-12 space-y-8 pb-20 px-4">
+  <div
+    class="flex flex-col h-screen px-8 py-8 mb-2 overflow-y-scroll w-screen space-y-4"
+  >
     <Card>
       <CardHeader>
         <CardTitle>👤 個人檔案概覽</CardTitle>
@@ -44,13 +135,6 @@
         </h2>
         <div class="flex gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            @click="toggleView('apply')"
-          >
-            {{ activeView === 'apply' ? '取消' : '申請加入' }}
-          </Button>
-          <Button
             size="sm"
             @click="toggleView('create')"
           >
@@ -58,64 +142,6 @@
           </Button>
         </div>
       </div>
-
-      <transition name="fade">
-        <div
-          v-if="activeView === 'apply'"
-          class="mb-8 p-6 bg-blue-50 rounded-lg border border-dashed border-blue-300"
-        >
-          <h3 class="font-bold mb-4 text-blue-800">搜尋並申請加入商家</h3>
-          <div class="flex gap-2 mb-4">
-            <Input
-              v-model="searchId"
-              placeholder="請輸入商家 ID (UUID)"
-            />
-            <Button
-              :disabled="isSearching"
-              @click="handleSearch"
-              >搜尋</Button
-            >
-          </div>
-          <div
-            v-if="foundVendor"
-            class="bg-white p-4 rounded-lg border border-blue-200 animate-in fade-in"
-          >
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <h4 class="font-bold text-lg text-gray-800">
-                  {{ foundVendor.name }}
-                </h4>
-                <p class="text-sm text-gray-500">
-                  店長：{{ foundVendor.ownerName || '系統管理員' }}
-                </p>
-              </div>
-              <Badge
-                variant="outline"
-                class="uppercase"
-                >{{ foundVendor.status }}</Badge
-              >
-            </div>
-            <div class="space-y-4 pt-4 border-t">
-              <div>
-                <label class="text-xs font-bold mb-1 block">申請職位</label>
-                <select
-                  v-model="selectedRole"
-                  class="w-full h-10 px-3 border rounded-md text-sm bg-white"
-                >
-                  <option value="CLERK">櫃員 (CLERK)</option>
-                  <option value="ADMIN">管理員 (ADMIN)</option>
-                </select>
-              </div>
-              <Button
-                class="w-full"
-                :disabled="vendorLoading"
-                @click="onApply"
-                >確認送出申請</Button
-              >
-            </div>
-          </div>
-        </div>
-      </transition>
 
       <transition name="fade">
         <div
@@ -234,131 +260,6 @@
     </section>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useUser } from '~/lib/useUser';
-import { useVendor, type VendorInfo, type EmployeeRole } from '~/lib/useVendor';
-import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Badge } from '~/components/ui/badge';
-import { Alert } from '~/components/ui/alert';
-import { Spinner } from '~/components/ui/spinner';
-import { useRouter } from 'vue-router';
-import { toast } from 'vue-sonner';
-
-const router = useRouter();
-const { userProfile, isLoading, fetchUserProfile } = useUser();
-const {
-  vendors,
-  loading: vendorLoading,
-  fetchVendors,
-  applyToVendor,
-  createVendor,
-} = useVendor();
-
-const activeView = ref<'none' | 'create' | 'apply'>('none');
-const isSearching = ref(false);
-
-const searchId = ref('');
-const foundVendor = ref<VendorInfo | null>(null);
-const selectedRole = ref<EmployeeRole>('CLERK');
-const newVendor = ref({ name: '', phone: '', email: '', address: '' });
-
-// 💡 狀態映射邏輯 (根據 MiiiYang 的要求)
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    ACTIVE: '可用',
-    PENDING: '等待審查',
-    INACTIVE: '不可用',
-  };
-  return map[status] || status;
-};
-
-const getStatusVariant = (status: string) => {
-  if (status === 'ACTIVE') return 'default';
-  if (status === 'PENDING') return 'outline';
-  return 'destructive';
-};
-
-const isEmailValid = computed(() => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(newVendor.value.email);
-});
-
-const isFormValid = computed(() => {
-  const { name, phone, address } = newVendor.value;
-  return (
-    name.trim() !== '' &&
-    phone.trim() !== '' &&
-    isEmailValid.value &&
-    address.trim() !== ''
-  );
-});
-
-const profileItems = computed(() => [
-  { label: '名稱', value: userProfile.value.name || '未設定' },
-  { label: 'Email', value: userProfile.value.email },
-]);
-
-const toggleView = (view: 'create' | 'apply') => {
-  activeView.value = activeView.value === view ? 'none' : view;
-  foundVendor.value = null;
-};
-
-const handleSearch = async () => {
-  if (!searchId.value) return;
-  isSearching.value = true;
-  foundVendor.value = null;
-  try {
-    foundVendor.value = await $fetch<VendorInfo>(
-      `/api/vendor/${searchId.value}/info`,
-      {
-        credentials: 'include',
-      },
-    );
-  } catch (e: unknown) {
-    const err = e as { statusCode?: number; data?: { message?: string } };
-    toast.error('搜尋失敗', {
-      description: err.data?.message || '找不到該商家 ID',
-    });
-  } finally {
-    isSearching.value = false;
-  }
-};
-
-const onApply = async () => {
-  if (!foundVendor.value || !userProfile.value.email) return;
-  const ok = await applyToVendor(foundVendor.value.vendorId, {
-    email: userProfile.value.email,
-    role: selectedRole.value,
-  });
-  if (ok) {
-    activeView.value = 'none';
-    searchId.value = '';
-    foundVendor.value = null;
-    await fetchVendors();
-  }
-};
-
-const handleCreate = async () => {
-  if (!isFormValid.value) return;
-  const ok = await createVendor(newVendor.value);
-  if (ok) {
-    activeView.value = 'none';
-    newVendor.value = { name: '', phone: '', email: '', address: '' };
-    await fetchVendors();
-  }
-};
-
-const enterDashboard = (id: string) => {
-  router.push(`/vendor/${id}`);
-};
-
-onMounted(() => {
-  Promise.all([fetchUserProfile(), fetchVendors()]);
-});
-</script>
 
 <style scoped>
 .fade-enter-active,

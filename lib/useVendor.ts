@@ -91,27 +91,6 @@ export const useVendor = () => {
     }
   };
 
-  const applyToVendor = async (
-    vendorId: string,
-    payload: { email: string; role: EmployeeRole },
-  ) => {
-    loading.value = true;
-    try {
-      await $fetch(`/api/vendor/${vendorId}/employee`, {
-        method: 'POST',
-        body: payload,
-        credentials: 'include',
-      });
-      toast.success('申請成功', { description: '您已成功加入該商家成員。' });
-      return true;
-    } catch (e) {
-      handleError(e);
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  };
-
   const createVendor = async (payload: Omit<Vendor, 'id' | 'role'>) => {
     loading.value = true;
     try {
@@ -131,5 +110,5 @@ export const useVendor = () => {
     }
   };
 
-  return { vendors, loading, fetchVendors, createVendor, applyToVendor };
+  return { vendors, loading, fetchVendors, createVendor };
 };
