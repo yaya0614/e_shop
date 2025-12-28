@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import cardModel from '~/components/card-model.vue';
 import {
   Pagination,
@@ -28,6 +27,9 @@ interface Product {
   };
 }
 
+const {
+  params: { vendorId },
+} = useRoute('vendor-vendorId-product');
 const router = useRouter();
 
 type SortFilter = '' | 'NEWEST' | 'OLDEST' | 'PRICE_LOW' | 'PRICE_HIGH';
@@ -77,7 +79,12 @@ const goToDetail = (id: string) => {
       </select>
       <button
         class="flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed transition"
-        @click="router.push({ name: 'vendor-product-create' })"
+        @click="
+          router.push({
+            name: 'vendor-vendorId-product-create',
+            params: { vendorId },
+          })
+        "
       >
         新增商品
       </button>

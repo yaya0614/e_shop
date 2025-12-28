@@ -10,11 +10,14 @@ interface MenuItem {
 
 const router = useRouter();
 const route = useRoute();
+const {
+  params: { vendorId },
+} = useRoute('vendor-vendorId');
 
 const mainMenu: MenuItem[] = [
-  { label: 'Dashboard', path: '/vendor' },
-  { label: '商品', path: '/vendor/product' },
-  { label: '訂單', path: '/vendor/order' },
+  { label: 'Dashboard', path: `/vendor/${vendorId}` },
+  { label: '商品', path: `/vendor/${vendorId}/product` },
+  { label: '訂單', path: `/vendor/${vendorId}/order` },
 ];
 
 const bottomMenu: MenuItem[] = [
