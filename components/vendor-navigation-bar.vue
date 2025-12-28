@@ -6,6 +6,7 @@ interface MenuItem {
   path?: string;
 
   danger?: boolean;
+  onClick?: () => void;
 }
 
 const router = useRouter();
@@ -22,8 +23,11 @@ const mainMenu: MenuItem[] = [
 
 const bottomMenu: MenuItem[] = [
   {
-    label: 'Logout',
+    label: '退出管理',
     danger: true,
+    onClick: () => {
+      router.push('/');
+    },
   },
 ];
 
@@ -33,7 +37,7 @@ const isActive = (path?: string): boolean => {
 };
 </script>
 <template>
-  <aside class="w-64 h-screen bg-white border-r flex flex-col justify-between">
+  <aside class="w-64 h-screen bg-white border-r flex flex-col space-y-8">
     <nav class="px-3 py-4 space-y-1">
       <button
         v-for="item in mainMenu"
@@ -61,7 +65,7 @@ const isActive = (path?: string): boolean => {
             : 'text-gray-600 hover:bg-green-50 hover:text-green-600',
           isActive(item.path) ? 'bg-green-100 text-green-600 font-medium' : '',
         ]"
-        @click="router.push(item.path!)"
+        @click="item.onClick"
       >
         <span>{{ item.label }}</span>
       </button>
