@@ -173,7 +173,7 @@ const refreshAll = async () => {
           v-if="pendingLoading"
           class="flex items-center justify-center py-12"
         >
-          <UiSpinner class="h-8 w-8" />
+          <Spinner class="h-8 w-8" />
           <span class="ml-3 text-gray-600">載入中...</span>
         </div>
 
@@ -280,7 +280,7 @@ const refreshAll = async () => {
           v-if="vendorsLoading"
           class="flex items-center justify-center py-12"
         >
-          <UiSpinner class="h-8 w-8" />
+          <Spinner class="h-8 w-8" />
           <span class="ml-3 text-gray-600">載入中...</span>
         </div>
 

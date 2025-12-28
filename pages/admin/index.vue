@@ -96,7 +96,7 @@ const getLogIcon = (message: string) => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="mx-auto px-4 py-8 flex flex-col overflow-hidden h-full w-full">
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold text-gray-900">管理員操作記錄</h1>
@@ -146,7 +146,7 @@ const getLogIcon = (message: string) => {
 
     <div
       v-else
-      class="space-y-3 overflow-y-auto flex flex-col flex-1 min-h-0"
+      class="overflow-y-auto flex flex-col flex-1 min-h-0 space-y-2"
     >
       <div
         v-for="log in logs"
