@@ -28,9 +28,9 @@ const responsesSchema = z.object({
         description: 'Order status',
         example: 'FINISH',
       }),
-      userId: z.string().openapi({
+      userName: z.string().openapi({
         description: 'User ID who placed the order',
-        example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        example: 'user-12345  ',
       }),
       products: z.array(
         z.object({
@@ -133,6 +133,11 @@ export default defineEventHandler(async (event) => {
       vendorId: vendorId,
     },
     include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
       products: {
         select: {
           productId: true,
@@ -162,7 +167,7 @@ export default defineEventHandler(async (event) => {
     orderId: order.id,
     price: order.price,
     status: order.status,
-    userId: order.userId,
+    userName: order.user.name,
     products: order.products,
   }));
 

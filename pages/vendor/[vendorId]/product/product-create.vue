@@ -1,60 +1,72 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 
 definePageMeta({
   layout: 'vendor-bar',
 });
+
+const {
+  params: { vendorId },
+} = route;
 
 const productName = ref('');
 const productDescription = ref('');
 const price = ref<number | null>(null);
 const quantity = ref<number | null>(null);
 
-const coverFile = ref<File | null>(null);
+const coverId = ref<string | undefined>(undefined);
+
 const coverPreview = ref<string | null>(null);
 
 const onCoverChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
-  if (!input.files || !input.files[0]) return;
+  if (!input.files?.[0]) return;
 
   const file = input.files[0];
-
   if (!file.type.startsWith('image/')) {
     alert('請上傳圖片檔案');
     return;
   }
 
-  coverFile.value = file;
   coverPreview.value = URL.createObjectURL(file);
+  coverId.value = 'a1b2c3d4-e5f6-7890-abcd-ef1234567009';
 };
-
 const onSubmit = async () => {
   if (!productName.value || price.value === null || quantity.value === null) {
     alert('請填寫完整商品資訊');
     return;
   }
 
-  const formData = new FormData();
-  formData.append('productName', productName.value);
-  formData.append('productDescription', productDescription.value);
-  formData.append('price', price.value.toString());
-  formData.append('quantity', quantity.value.toString());
+  await $fetch(`/api/vendor/${vendorId}/product`, {
+    method: 'POST',
+    body: {
+      productName: productName.value,
+      productDescription: productDescription.value || undefined,
+      price: price.value,
+      quantity: quantity.value,
+      coverId: coverId.value,
+    },
+    credentials: 'include',
+  });
 
-  if (coverFile.value) {
-    formData.append('cover', coverFile.value);
-  }
+  alert('商品新增成功');
 
-  alert('商品已送出（目前為 demo）');
+  productName.value = '';
+  productDescription.value = '';
+  price.value = null;
+  quantity.value = null;
+  coverId.value = undefined;
+  coverPreview.value = null;
 };
 </script>
 
 <template>
   <div class="flex flex-col px-8 py-8 h-screen w-screen">
     <h1 class="font-semibold mb-6 text-2xl">新增商品</h1>
-
     <div class="flex flex-1 gap-20 flex-row justify-between">
       <form
         class="space-y-6 lg:col-span-2 max-w-xl flex flex-col flex-1"
@@ -82,7 +94,7 @@ const onSubmit = async () => {
             rows="4"
             placeholder="請輸入商品描述"
             class="w-full p-2 border rounded-lg resize-none focus:ring-blue-500 focus:border-blue-500"
-          />
+          ></textarea>
         </div>
 
         <div>

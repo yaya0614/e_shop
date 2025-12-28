@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { ChartConfig } from '@/components/ui/chart';
 import { VisAxis, VisGroupedBar, VisXYContainer } from '@unovis/vue';
 import {
@@ -10,68 +11,78 @@ import {
   componentToString,
 } from '@/components/ui/chart';
 
-const chartData = [
-  { date: new Date('2024-01-01'), desktop: 186, mobile: 80 },
-  { date: new Date('2024-02-01'), desktop: 305, mobile: 200 },
-  { date: new Date('2024-03-01'), desktop: 237, mobile: 120 },
-  { date: new Date('2024-04-01'), desktop: 73, mobile: 190 },
-  { date: new Date('2024-05-01'), desktop: 209, mobile: 130 },
-  { date: new Date('2024-06-01'), desktop: 214, mobile: 140 },
-];
+export interface YearChartPoint {
+  date: Date;
+  value: number;
+}
 
-type Data = (typeof chartData)[number];
-
-const chartConfig = {
-  desktop: {
-    label: '2025',
+const props = withDefaults(
+  defineProps<{
+    data: YearChartPoint[];
+    label?: string;
+    color?: string;
+  }>(),
+  {
+    label: '每月營收',
     color: '#2563eb',
   },
-  mobile: {
-    label: '2024',
-    color: '#60a5fa',
-  },
-} satisfies ChartConfig;
-</script>
+);
 
+const chartConfig = computed<ChartConfig>(() => ({
+  value: {
+    label: props.label,
+    color: props.color,
+  },
+}));
+
+type Data = YearChartPoint;
+</script>
 <template>
   <div class="p-4">
+    <div
+      v-if="!props.data || props.data.length === 0"
+      class="flex items-center justify-center min-h-[200px] text-sm text-gray-400"
+    >
+      尚無圖表資料
+    </div>
+
     <ChartContainer
+      v-else
       :config="chartConfig"
       class="min-h-[200px] w-full"
     >
-      <VisXYContainer :data="chartData">
+      <VisXYContainer :data="props.data">
         <VisGroupedBar
           :x="(d: Data) => d.date"
-          :y="[(d: Data) => d.desktop, (d: Data) => d.mobile]"
-          :color="[chartConfig.desktop.color, chartConfig.mobile.color]"
+          :y="[(d: Data) => d.value]"
+          :color="[chartConfig.value.color]"
           :rounded-corners="4"
-          bar-padding="0.1"
-          group-padding="0"
+          bar-padding="0.2"
         />
+
         <VisAxis
           type="x"
           :x="(d: Data) => d.date"
           :tick-line="false"
           :domain-line="false"
           :grid-line="false"
+          :tick-values="props.data.map((d) => d.date)"
           :tick-format="
-            (d: number) => {
-              const date = new Date(d);
-              return date.toLocaleDateString('en-US', {
-                month: 'short',
-              });
-            }
+            (d: number) =>
+              new Date(d).toLocaleDateString('en-US', { month: 'short' })
           "
-          :tick-values="chartData.map((d) => d.date)"
         />
+
         <VisAxis
           type="y"
-          :tick-format="(d: number) => ''"
+          :tick-format="() => ''"
           :tick-line="false"
           :domain-line="false"
           :grid-line="true"
         />
+
         <ChartTooltip />
+
         <ChartCrosshair
           :template="
             componentToString(chartConfig, ChartTooltipContent, {
@@ -82,7 +93,7 @@ const chartConfig = {
               },
             })
           "
-          :color="[chartConfig.desktop.color, chartConfig.mobile.color]"
+          :color="[chartConfig.value.color]"
         />
       </VisXYContainer>
 

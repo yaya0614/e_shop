@@ -2,33 +2,11 @@ import { prisma } from '~/lib/prisma';
 import type { AuthContextPayload } from '~/types/auth';
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { OrderStatus } from '~/prisma/generated/enums';
-import type { Prisma } from '~/prisma/generated/client';
 
 extendZodWithOpenApi(z);
 
-const filterEnum = z.enum(Object.values(OrderStatus));
-const querySchema = z.object({
-  keyword: z.string().optional().openapi({
-    description: 'Keyword to search order',
-    example: '心裡',
-  }),
-  page: z
-    .string()
-    .default('1')
-    .transform((val) => (isNaN(parseInt(val)) ? 1 : parseInt(val))),
-  limit: z
-    .string()
-    .default('30')
-    .transform((val) => (isNaN(parseInt(val)) ? 30 : parseInt(val))),
-  filter: filterEnum.optional().openapi({
-    description: 'Filter used to determine order sorting order',
-    example: 'RECEIVED',
-  }),
-});
-
 const OrderItemSchema = z.object({
-  id: z.string().openapi({
+  orderId: z.string().openapi({
     description: 'Order ID',
     example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
   }),
@@ -40,6 +18,10 @@ const OrderItemSchema = z.object({
     description: 'Status of the order',
     example: 'RECEIVED',
   }),
+  userName: z.string().openapi({
+    description: 'Name of the user who placed the order',
+    example: 'John Doe',
+  }),
   createdAt: z.string().datetime().openapi({
     description: 'Creation datetime of the order',
     example: '2025-11-29T08:30:00.000Z',
@@ -48,19 +30,27 @@ const OrderItemSchema = z.object({
     description: 'Last update datetime of the order',
     example: '2025-11-30T10:15:00.000Z',
   }),
+  products: z
+    .array(
+      z.object({
+        productId: z.string().openapi({
+          description: 'Product ID',
+          example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+        }),
+        quantity: z.number().openapi({
+          description: 'Quantity of the product in the order',
+          example: 2,
+        }),
+      }),
+    )
+    .openapi({
+      description: 'List of products in the order',
+    }),
 });
 
 const responseSchema = z.object({
   orders: z.array(OrderItemSchema).openapi({
     description: 'List of orders',
-  }),
-  totalPages: z.number().openapi({
-    description: 'Total number of pages',
-    example: 10,
-  }),
-  page: z.number().openapi({
-    description: 'Current page number',
-    example: 1,
   }),
 });
 
@@ -79,7 +69,6 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: {
     params: paramsSchema,
-    query: querySchema,
   },
   responses: {
     200: {
@@ -133,99 +122,36 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { data: query, success: queryResult } = await getValidatedQuery(
-    event,
-    querySchema.safeParse,
-  );
-
-  if (!queryResult) {
-    throw createError({
-      statusCode: 400,
-      message: 'Bad Request',
-    });
-  }
-
-  const { keyword, page, limit, filter } = query;
-  const findCondition: Prisma.OrderWhereInput = {
-    vendorId: params.vendorId,
-    OR: keyword
-      ? [
-          {
-            id: {
-              contains: keyword,
-            },
-          },
-          {
-            user: {
-              name: {
-                contains: keyword,
-              },
-            },
-          },
-          {
-            user: {
-              email: {
-                contains: keyword,
-              },
-            },
-          },
-          {
-            user: {
-              address: {
-                contains: keyword,
-              },
-            },
-          },
-          {
-            products: {
-              some: {
-                product: {
-                  name: { contains: keyword },
-                },
-              },
-            },
-          },
-          {
-            coupon: {
-              code: {
-                contains: keyword,
-              },
-            },
-          },
-        ]
-      : undefined,
-    status: filter ? filter : undefined,
-  };
-
   const orders = await prisma.order.findMany({
-    where: findCondition,
+    where: {
+      vendorId: params.vendorId,
+    },
     include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
       products: {
         include: {
           product: true,
         },
       },
     },
-    skip: (page - 1) * limit,
-    take: limit,
-    orderBy: {
-      updatedAt: 'desc',
-    },
-  });
-
-  const total = await prisma.order.count({
-    where: findCondition,
   });
 
   return {
     orders: orders.map((order) => ({
-      id: order.id,
+      orderId: order.id,
       price: order.price,
       status: order.status,
+      userName: order.user.name,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
+      products: order.products.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+      })),
     })),
-    totalPages: Math.ceil(total / limit),
-    page: page,
   };
 });

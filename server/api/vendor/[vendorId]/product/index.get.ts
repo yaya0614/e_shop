@@ -9,6 +9,9 @@ const schemaResponses = z.object({
   products: z
     .array(
       z.object({
+        id: z
+          .string()
+          .openapi({ description: 'Product ID', example: 'prod_123' }),
         name: z
           .string()
           .openapi({ description: 'Product name', example: 'Product 1' }),
@@ -16,6 +19,9 @@ const schemaResponses = z.object({
           description: 'Product description',
           example: 'Product description',
         }),
+        status: z
+          .string()
+          .openapi({ description: 'Product status', example: 'active' }),
         price: z
           .number()
           .openapi({ description: 'Product price', example: 100 }),
@@ -95,9 +101,12 @@ export default defineEventHandler(async (event) => {
   const products = await prisma.product.findMany({
     where: {
       vendorId: vendorId,
+      isDeleted: false,
     },
     select: {
+      id: true,
       name: true,
+      status: true,
       description: true,
       price: true,
       discountPrice: true,
