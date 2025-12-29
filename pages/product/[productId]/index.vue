@@ -214,11 +214,7 @@ const goToDetail = (id: string) => {
           style="width: 400px; height: 400px"
         >
           <img
-            :src="
-              product.coverId
-                ? `/api/image/${product.coverId}`
-                : 'https://picsum.photos/200/300'
-            "
+            :src="'https://picsum.photos/200/300'"
             class="w-full h-full object-contain"
           />
         </div>
@@ -343,7 +339,7 @@ const goToDetail = (id: string) => {
                   <cardModel
                     :id="book.id"
                     :description="book.name"
-                    :path-test="book.coverId || 'https://picsum.photos/200/300'"
+                    :path-test="'https://picsum.photos/200/300'"
                     :price="book.price"
                     :discount-price="book.discountPrice"
                     :navigate-detail="goToDetail"

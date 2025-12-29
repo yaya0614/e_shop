@@ -100,7 +100,7 @@ const goToDetail = (productId: string) => {
           <cardModel
             :id="product.id"
             :description="product.name"
-            :path-test="product.coverId || 'https://picsum.photos/200/300'"
+            :path-test="'https://picsum.photos/200/300'"
             :price="product.price"
             :discount-price="product.discountPrice"
             :navigate-detail="() => goToDetail(product.id)"

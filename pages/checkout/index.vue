@@ -305,11 +305,7 @@ onMounted(async () => {
                 class="p-5 flex items-center gap-6 hover:bg-gray-50 transition-colors"
               >
                 <img
-                  :src="
-                    item.product.coverId
-                      ? `/api/image/${item.product.coverId}`
-                      : 'https://picsum.photos/100/100'
-                  "
+                  :src="'https://picsum.photos/100/100'"
                   class="w-16 h-16 object-cover rounded-lg border"
                 />
                 <div class="flex-1 min-w-0">

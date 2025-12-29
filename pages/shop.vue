@@ -221,11 +221,7 @@ onMounted(() => {
             >
               <div class="p-3 flex items-center">
                 <img
-                  :src="
-                    item.product.coverId
-                      ? `/api/image/${item.product.coverId}`
-                      : 'https://picsum.photos/200/200'
-                  "
+                  :src="'https://picsum.photos/200/200'"
                   class="w-16 h-16 object-cover rounded mr-4 bg-gray-100 flex-shrink-0"
                 />
                 <span class="font-medium text-sm text-gray-800 line-clamp-2">{{
