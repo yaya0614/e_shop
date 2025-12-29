@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import { useUser } from '~/lib/useUser';
 import { useVendor, type VendorInfo } from '~/lib/useVendor';
 import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card';
@@ -156,6 +157,27 @@ onMounted(() => {
           class="text-sm text-blue-600 font-bold hover:underline"
         >
           前往管理 →
+        </NuxtLink>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader class="block text-sm font-medium mb-2 text-gray-700">
+        <CardTitle>帳號活動</CardTitle>
+      </CardHeader>
+      <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">📋</span>
+          <span class="text-sm font-medium text-gray-600"
+            >查看您的個人操作日誌與異動紀錄</span
+          >
+        </div>
+
+        <NuxtLink
+          to="/user/log"
+          class="text-sm text-blue-600 font-bold hover:underline"
+        >
+          查看紀錄 →
         </NuxtLink>
       </CardContent>
     </Card>
