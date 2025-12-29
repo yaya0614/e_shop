@@ -6,7 +6,6 @@ definePageMeta({
   layout: 'vendor-bar',
 });
 
-// --- 介面定義 ---
 interface Employee {
   id: string;
   userId: string;
@@ -22,17 +21,14 @@ interface ApiError {
   data?: { message?: string };
 }
 
-// --- 路由參數 ---
 const {
   params: { vendorId },
 } = useRoute('vendor-vendorId');
 
-// --- 狀態管理 ---
 const inviteEmail = ref('');
 const inviteRole = ref<EmployeeRole>(EmployeeRole.CLERK);
 const isProcessing = ref(false);
 
-// --- 錯誤處理邏輯 (移植自 index.vue) ---
 const mapEmployeeErrorToUserMessage = (
   e: ApiError,
   action: string,
@@ -64,9 +60,6 @@ const mapEmployeeErrorToUserMessage = (
   return { title, description };
 };
 
-// --- API 請求實作 ---
-
-// 1. 獲取員工清單 (SQL-55)
 const {
   data: employees,
   refresh,
@@ -77,7 +70,6 @@ const {
   lazy: true,
 });
 
-// 2. 邀請新員工 (SQL-54)
 const handleInvite = async () => {
   if (!inviteEmail.value) return;
   isProcessing.value = true;
@@ -106,7 +98,6 @@ const handleInvite = async () => {
   }
 };
 
-// 3. 修改員工職位 (SQL-57)
 const handleUpdateRole = async (employeeId: string, newRole: EmployeeRole) => {
   try {
     await $fetch(`/api/vendor/${vendorId}/employee`, {
@@ -127,7 +118,6 @@ const handleUpdateRole = async (employeeId: string, newRole: EmployeeRole) => {
   }
 };
 
-// 4. 刪除員工 (SQL-56)
 const handleDelete = async (employeeId: string, name: string) => {
   if (!confirm(`確定要移除員工 ${name} 嗎？`)) return;
 
@@ -152,12 +142,9 @@ const handleDelete = async (employeeId: string, name: string) => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col h-screen px-8 py-8 overflow-y-auto w-full bg-gray-50"
-  >
+  <div class="flex flex-1 flex-col px-8 py-8 h-screen w-screen">
+    <h1 class="font-semibold mb-6 text-2xl">員工管理</h1>
     <div class="max-w-6xl w-full mx-auto">
-      <h1 class="font-semibold mb-8 text-2xl text-gray-800">員工管理</h1>
-
       <div class="bg-white p-6 rounded-lg border shadow-sm mb-8">
         <h2 class="text-lg font-medium mb-4 text-gray-700">邀請團隊成員</h2>
         <div class="flex flex-col sm:flex-row gap-4 items-end">

@@ -93,7 +93,7 @@ const updateOrderStatus = async (
 
 <template>
   <div class="flex flex-1 flex-col px-8 py-8 h-screen w-screen">
-    <div class="flex flex-row justify-between items-center py-4">
+    <div class="flex flex-row justify-between items-center mb-6">
       <h1 class="font-semibold text-2xl">商家訂單</h1>
       <div class="flex gap-3">
         <Select v-model="sortBy">

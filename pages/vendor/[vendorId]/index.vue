@@ -8,7 +8,6 @@ definePageMeta({
   layout: 'vendor-bar',
 });
 
-// 定義明確介面
 interface VendorDetail {
   id: string;
   name: string;
@@ -32,7 +31,6 @@ const loading = ref(true);
 const vendorInfo = ref<VendorDetail | null>(null);
 const router = useRouter();
 
-// 錯誤訊息映射邏輯
 const mapVendorErrorToUserMessage = (
   e: ApiError,
 ): { title: string; description: string } => {
@@ -66,13 +64,12 @@ const mapVendorErrorToUserMessage = (
 const initVendorDashboard = async () => {
   loading.value = true;
   try {
-    // 根據 README 說明，調用此 API 觸發 Token Exchange
     await $fetch<VendorDetail>(`/api/vendor/${vendorId}`, {
-      credentials: 'include', // 確保包含 Cookie 以進行身分驗證
+      credentials: 'include',
     });
 
     const data = await $fetch<VendorDetail>(`/api/vendor/${vendorId}/info`, {
-      credentials: 'include', // 確保包含 Cookie 以進行身分驗證
+      credentials: 'include',
     });
 
     vendorInfo.value = data;
@@ -178,7 +175,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col p-8 flex-1 w-full">
-    <h1 class="font-semibold mb-4 text-2xl">Dashboard</h1>
+    <h1 class="font-semibold mb-6 text-2xl">Dashboard</h1>
     <div class="flex flex-col space-y-4 min-h-0 overflow-y-scroll">
       <div class="flex flex-row gap-6 w-full">
         <div class="flex flex-col basis-4/5">

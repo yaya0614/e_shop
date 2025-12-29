@@ -5,7 +5,6 @@ definePageMeta({
   layout: 'vendor-bar',
 });
 
-// --- 介面定義 ---
 interface LogEntry {
   id: string;
   message: string;
@@ -26,12 +25,10 @@ interface ApiError {
   data?: { message?: string };
 }
 
-// --- 路由參數 ---
 const {
   params: { vendorId },
 } = useRoute('vendor-vendorId');
 
-// --- 錯誤處理邏輯 (參考 index.vue 模式) ---
 const mapLogErrorToUserMessage = (
   e: ApiError,
 ): { title: string; description: string } => {
@@ -61,7 +58,6 @@ const mapLogErrorToUserMessage = (
   return { title, description };
 };
 
-// --- 資料獲取 ---
 const { data, pending, error, refresh } = await useFetch<LogResponse>(
   `/api/vendor/${vendorId}/log`,
   {
@@ -71,7 +67,6 @@ const { data, pending, error, refresh } = await useFetch<LogResponse>(
   },
 );
 
-// 處理錯誤通知
 watch(error, (newErr) => {
   if (newErr) {
     const err = newErr as unknown as ApiError;
@@ -80,7 +75,6 @@ watch(error, (newErr) => {
   }
 });
 
-// 格式化日期
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString('zh-TW', {
     year: 'numeric',
@@ -94,106 +88,100 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col h-screen px-8 pt-8 pb-32 overflow-y-auto w-full bg-gray-50"
-  >
-    <div class="max-w-6xl w-full mx-auto">
-      <div class="flex justify-between items-center mb-8 shrink-0">
-        <h1 class="font-semibold text-2xl text-gray-800">
-          操作日誌 (Audit Logs)
-        </h1>
-        <button
-          :disabled="pending"
-          class="inline-flex items-center gap-2 bg-white border px-4 py-2 rounded-md hover:bg-gray-50 transition shadow-sm text-sm disabled:opacity-50"
-          @click="() => refresh()"
+  <div class="flex flex-1 flex-col px-8 py-8 h-screen w-screen">
+    <h1 class="font-semibold mb-4 text-2xl">操作日誌</h1>
+    <div class="w-full flex mb-6 justify-end">
+      <button
+        :disabled="pending"
+        class="flex gap-2 bg-gray-100 border px-4 py-2 rounded-md hover:bg-gray-50 transition shadow-sm text-sm disabled:opacity-50"
+        @click="() => refresh()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          :class="{ 'animate-spin': pending }"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            :class="{ 'animate-spin': pending }"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          重新整理
-        </button>
-      </div>
-
-      <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
-        <table class="w-full text-left border-collapse">
-          <thead class="bg-gray-50 border-b">
-            <tr>
-              <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/4">
-                發生時間
-              </th>
-              <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/4">
-                操作人員
-              </th>
-              <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/2">
-                異動描述
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr
-              v-if="pending && !data"
-              class="animate-pulse"
-            >
-              <td
-                colspan="3"
-                class="px-6 py-10 text-center text-gray-400"
-              >
-                正在同步日誌資料...
-              </td>
-            </tr>
-            <tr v-else-if="!data?.logs || data.logs.length === 0">
-              <td
-                colspan="3"
-                class="px-6 py-10 text-center text-gray-400"
-              >
-                此商家目前尚無操作紀錄
-              </td>
-            </tr>
-            <tr
-              v-for="log in data?.logs"
-              :key="log.id"
-              class="hover:bg-gray-50 transition-colors"
-            >
-              <td class="px-6 py-4 text-sm text-gray-500 font-mono">
-                {{ formatDate(log.createdAt) }}
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold shrink-0"
-                  >
-                    {{ log.user.name?.charAt(0) || 'U' }}
-                  </div>
-                  <span
-                    class="text-sm font-medium text-gray-700 truncate max-w-[150px]"
-                  >
-                    {{ log.user.name || '未知使用者' }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="text-sm text-gray-600 leading-relaxed">
-                  {{ log.message }}
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="h-10"></div>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        重新整理
+      </button>
     </div>
+
+    <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50 border-b">
+          <tr>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/4">
+              發生時間
+            </th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/4">
+              操作人員
+            </th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600 w-1/2">
+              異動描述
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr
+            v-if="pending && !data"
+            class="animate-pulse"
+          >
+            <td
+              colspan="3"
+              class="px-6 py-10 text-center text-gray-400"
+            >
+              正在同步日誌資料...
+            </td>
+          </tr>
+          <tr v-else-if="!data?.logs || data.logs.length === 0">
+            <td
+              colspan="3"
+              class="px-6 py-10 text-center text-gray-400"
+            >
+              此商家目前尚無操作紀錄
+            </td>
+          </tr>
+          <tr
+            v-for="log in data?.logs"
+            :key="log.id"
+            class="hover:bg-gray-50 transition-colors"
+          >
+            <td class="px-6 py-4 text-sm text-gray-500 font-mono">
+              {{ formatDate(log.createdAt) }}
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold shrink-0"
+                >
+                  {{ log.user.name?.charAt(0) || 'U' }}
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 truncate max-w-[150px]"
+                >
+                  {{ log.user.name || '未知使用者' }}
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm text-gray-600 leading-relaxed">
+                {{ log.message }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="h-10"></div>
   </div>
 </template>
