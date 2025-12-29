@@ -26,15 +26,13 @@ const hasDiscount = computed(() => {
 
 <template>
   <div
-    class="group bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden max-w-[240px] w-full mx-auto"
+    class="group bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
     @click="navigateDetail(id)"
   >
-    <div
-      class="aspect-[3/4] w-full bg-gray-50 flex items-center justify-center p-6"
-    >
+    <div class="aspect-[3/4] w-full bg-gray-50 flex p-8">
       <img
         :src="pathTest"
-        class="max-h-full max-w-full object-contain shadow-sm group-hover:scale-105 transition-transform duration-300"
+        class="max-h-full max-w-full object-contain shadow-sm group-hover:scale-110 transition-transform duration-300"
         alt="Book Cover"
       />
     </div>

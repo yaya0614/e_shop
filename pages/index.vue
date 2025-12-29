@@ -104,7 +104,7 @@ const goToDetail = (id: string) => {
         <!-- 商品卡片 -->
         <div
           v-else
-          class="grid grid-cols-5 gap-8 mt-4"
+          class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-4"
         >
           <div
             v-for="product in products"
@@ -113,7 +113,7 @@ const goToDetail = (id: string) => {
             <cardModel
               :id="product.id"
               :description="product.name"
-              :path-test="product.coverId || 'https://picsum.photos/200/300'"
+              :path-test="'https://picsum.photos/200/300'"
               :price="product.price"
               :discount-price="product.discountPrice"
               :navigate-detail="goToDetail"

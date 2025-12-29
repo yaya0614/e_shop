@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { FetchError } from 'ofetch';
+import type { PaymentCard } from '~/types/payment';
 
 /* =====================
  * 型別定義
@@ -38,6 +39,7 @@ interface Coupon {
 const route = useRoute();
 const orderProducts = ref<OrderProduct[]>([]);
 const availableCoupons = ref<Coupon[]>([]);
+const availablePayments = ref<PaymentCard[]>([]);
 const isProcessing = ref(false);
 
 // API 試算回來的最終應付金額
@@ -47,6 +49,9 @@ const previewPrice = ref<number | null>(null);
 const selectedCouponId = ref('');
 const manualCouponCode = ref('');
 const isApplyingCode = ref(false);
+
+// 支付方式選擇
+const selectedPaymentId = ref('');
 
 const receiverData = ref({
   name: '',
@@ -149,6 +154,24 @@ const loadAvailableCoupons = async () => {
   }
 };
 
+// 載入可用支付方式
+const loadAvailablePayments = async () => {
+  try {
+    const data = await $fetch<{ payments: PaymentCard[] }>(
+      '/api/user/payment',
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    );
+    availablePayments.value = data.payments;
+  } catch (error) {
+    if (error instanceof FetchError) {
+      toast.error('載入支付方式失敗');
+    }
+  }
+};
+
 // 領取優惠代碼
 const applyManualCode = async () => {
   if (!manualCouponCode.value.trim()) return;
@@ -217,6 +240,11 @@ const handleCreateOrder = async () => {
     return;
   }
 
+  if (!selectedPaymentId.value) {
+    toast.error('請選擇支付方式');
+    return;
+  }
+
   isProcessing.value = true;
   try {
     const response = await $fetch<{ orderId: string }>('/api/order', {
@@ -228,6 +256,7 @@ const handleCreateOrder = async () => {
           quantity: item.quantity,
         })),
         couponId: selectedCouponId.value || undefined,
+        paymentId: selectedPaymentId.value,
       },
     });
 
@@ -251,6 +280,7 @@ const handleCreateOrder = async () => {
 onMounted(async () => {
   await loadCartData();
   await loadAvailableCoupons();
+  await loadAvailablePayments();
   await calculatePreviewPrice();
 });
 </script>
@@ -258,11 +288,11 @@ onMounted(async () => {
 <template>
   <NuxtLayout name="header-all">
     <div class="bg-[#fcfcfc] w-full min-h-screen font-sans text-gray-800">
-      <div class="w-full pl-10 pr-[420px] py-10 relative">
-        <div class="max-w-[720px]">
+      <div class="w-full py-10 relative flex-row flex px-8 gap-x-8">
+        <div class="w-2/3 pr-8 space-y-8">
           <h2 class="text-2xl font-bold mb-8">結帳確認</h2>
 
-          <div class="mb-12">
+          <div>
             <h3 class="text-sm font-bold text-gray-400 uppercase mb-4 ml-1">
               商品明細 ({{ orderProducts.length }})
             </h3>
@@ -275,11 +305,7 @@ onMounted(async () => {
                 class="p-5 flex items-center gap-6 hover:bg-gray-50 transition-colors"
               >
                 <img
-                  :src="
-                    item.product.coverId
-                      ? `/api/image/${item.product.coverId}`
-                      : 'https://picsum.photos/100/100'
-                  "
+                  :src="'https://picsum.photos/100/100'"
                   class="w-16 h-16 object-cover rounded-lg border"
                 />
                 <div class="flex-1 min-w-0">
@@ -308,7 +334,67 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="mb-10">
+          <div>
+            <h3 class="text-sm font-bold text-gray-400 uppercase mb-4 ml-1">
+              支付方式 <span class="text-red-500 text-xs ml-1">*必選</span>
+            </h3>
+            <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+              <div
+                v-if="availablePayments.length === 0"
+                class="text-center py-8 text-gray-500"
+              >
+                <p class="mb-4">您尚未綁定任何支付方式</p>
+                <NuxtLink
+                  to="/user/payment"
+                  class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                >
+                  前往綁定信用卡
+                </NuxtLink>
+              </div>
+
+              <div
+                v-else
+                class="grid grid-cols-1 gap-3"
+              >
+                <label
+                  v-for="payment in availablePayments"
+                  :key="payment.id"
+                  class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-blue-300"
+                  :class="{
+                    'border-blue-600 bg-blue-50':
+                      selectedPaymentId === payment.id,
+                    'border-gray-200': selectedPaymentId !== payment.id,
+                  }"
+                >
+                  <input
+                    v-model="selectedPaymentId"
+                    type="radio"
+                    :value="payment.id"
+                    class="w-4 h-4 text-blue-600"
+                  />
+                  <div class="ml-4 flex-1">
+                    <div class="flex items-center gap-3">
+                      <span class="font-bold text-sm">{{
+                        payment.bankName
+                      }}</span>
+                      <span class="text-xs text-gray-500 uppercase">{{
+                        payment.type
+                      }}</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                      {{ payment.binCode }} **** **** {{ payment.lastFour }}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">
+                      {{ payment.cardHolderName }} · 有效期限
+                      {{ payment.expiryMonth }}/{{ payment.expiryYear }}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
             <h3 class="text-sm font-bold text-gray-400 uppercase mb-4 ml-1">
               寄送資料 <span class="text-red-500 text-xs ml-1">*必填</span>
             </h3>
@@ -351,8 +437,9 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+        <div class="w-1/3" />
 
-        <div class="fixed top-[160px] right-10 w-[340px] space-y-4">
+        <div class="right-8 fixed w-1/3 space-y-4">
           <div class="bg-white p-6 rounded-2xl border shadow-lg space-y-6">
             <h3 class="text-base font-bold border-b pb-3">結帳明細</h3>
 

@@ -31,6 +31,11 @@ const schema = z
       description: 'Coupon object applied to the order',
       example: 'f98afd90-8410-4c18-9c5d-b993a9da65e1',
     }),
+
+    paymentId: z.uuid().openapi({
+      description: 'Payment method ID',
+      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    }),
   })
   .openapi('CreateOrderRequest');
 
@@ -109,6 +114,22 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       message: payload.error.message,
+    });
+  }
+
+  // 驗證支付方式是否存在且屬於該用戶
+  const payment = await prisma.payment.findFirst({
+    where: {
+      id: payload.data.paymentId,
+      userId: userId,
+      isDeleted: false,
+    },
+  });
+
+  if (!payment) {
+    throw createError({
+      statusCode: 404,
+      message: 'Payment method not found or does not belong to user',
     });
   }
 
@@ -236,6 +257,7 @@ export default defineEventHandler(async (event) => {
         userId: userId,
         couponId: payload.data.couponId,
         vendorId: orderVendorIds[0].vendorId,
+        paymentId: payload.data.paymentId,
       },
     });
     orderId = order.id;
