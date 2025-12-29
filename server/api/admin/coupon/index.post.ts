@@ -148,6 +148,10 @@ export default defineEventHandler(async (event) => {
 
   const userId = auth.userId;
 
+  if (!payload.data.code) {
+    payload.data.code = Math.random().toString(36).substring(2, 15);
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.coupon.create({
       data: {
@@ -173,6 +177,6 @@ export default defineEventHandler(async (event) => {
   });
 
   return {
-    status: 'success',
+    code: payload.data.code,
   };
 });

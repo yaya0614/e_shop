@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { FetchError } from 'ofetch';
+import Select from '~/components/ui/select/Select.vue';
+import SelectContent from '~/components/ui/select/SelectContent.vue';
+import SelectItem from '~/components/ui/select/SelectItem.vue';
+import SelectTrigger from '~/components/ui/select/SelectTrigger.vue';
+import SelectValue from '~/components/ui/select/SelectValue.vue';
+import type { CouponType } from '~/prisma/generated/enums';
+import { toast } from 'vue-sonner';
 
 definePageMeta({
   layout: 'admin',
@@ -8,11 +15,16 @@ definePageMeta({
 
 const router = useRouter();
 const loading = ref(false);
-const errorMessage = ref<string | null>(null);
-const successMessage = ref<string | null>(null);
 
-const form = ref({
-  type: 'DISCOUNT' as const,
+const form = ref<{
+  type: CouponType;
+  discount: number;
+  couponPercentage: number;
+  maxPrice: number;
+  minPrice: number;
+  code: string;
+}>({
+  type: 'DISCOUNT',
   discount: 0,
   couponPercentage: 0,
   maxPrice: 0,
@@ -21,42 +33,73 @@ const form = ref({
 });
 
 const submit = async () => {
-  errorMessage.value = null;
-  successMessage.value = null;
-
-  if (!form.value.code) {
-    errorMessage.value = '請輸入 Coupon Code';
-    return;
-  }
-
   loading.value = true;
 
-  await $fetch('/api/admin/coupon', {
-    method: 'POST',
-    body: {
-      type: form.value.type,
-      discount: Number(form.value.discount),
-      couponPercentage: Number(form.value.couponPercentage),
-      maxPrice: Number(form.value.maxPrice),
-      minPrice: Number(form.value.minPrice),
-      code: form.value.code,
-    },
-  });
+  try {
+    const response = await $fetch('/api/admin/coupon', {
+      method: 'POST',
+      body: {
+        type: form.value.type,
+        discount:
+          form.value.type === 'DISCOUNT'
+            ? Number(form.value.discount)
+            : undefined,
+        couponPercentage:
+          form.value.type === 'COUPON'
+            ? Number(form.value.couponPercentage)
+            : undefined,
+        maxPrice:
+          Number(form.value.maxPrice) > 0
+            ? Number(form.value.maxPrice)
+            : undefined,
+        minPrice:
+          Number(form.value.minPrice) > 0
+            ? Number(form.value.minPrice)
+            : undefined,
+        code: form.value.code,
+      },
+    });
 
-  successMessage.value = 'Coupon 建立成功';
-  setTimeout(() => {
-    router.back();
-  }, 800);
+    toast.success(`Coupon: ${response.code} 建立成功`);
+
+    form.value = {
+      type: 'DISCOUNT',
+      discount: 0,
+      couponPercentage: 0,
+      maxPrice: 0,
+      minPrice: 0,
+      code: '',
+    };
+  } catch (error) {
+    if (error instanceof FetchError) {
+      toast.error(error.message);
+    }
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 
 <template>
-  <div class="max-w-fullmx-auto px-6 py-8 flex flex-col flex-1">
+  <div class="max-w-fullmx-auto px-6 py-8 flex flex-col flex-1 max-w-4/6">
     <h1 class="text-2xl font-semibold mb-6 flex flex-1justify-start">
       Create Coupon
     </h1>
 
     <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Coupon Type</label>
+        <Select v-model="form.type">
+          <SelectTrigger>
+            <SelectValue placeholder="Select a coupon type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="DISCOUNT">折價卷</SelectItem>
+            <SelectItem value="COUPON">優惠卷</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div>
         <label class="block text-sm font-medium mb-1">Coupon Code</label>
         <input
@@ -67,7 +110,7 @@ const submit = async () => {
         />
       </div>
 
-      <div>
+      <div v-if="form.type === 'DISCOUNT'">
         <label class="block text-sm font-medium mb-1"> Discount（金額） </label>
         <input
           v-model.number="form.discount"
@@ -76,7 +119,7 @@ const submit = async () => {
         />
       </div>
 
-      <div>
+      <div v-if="form.type === 'COUPON'">
         <label class="block text-sm font-medium mb-1">
           Coupon Percentage（%）
         </label>
@@ -90,7 +133,9 @@ const submit = async () => {
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-1"> Minimum Price </label>
+        <label class="block text-sm font-medium mb-1">
+          Minimum Price (optional )
+        </label>
         <input
           v-model.number="form.minPrice"
           type="number"
@@ -100,7 +145,7 @@ const submit = async () => {
 
       <div>
         <label class="block text-sm font-medium mb-1">
-          Maximum Discount Price
+          Maximum Discount Price (optional)
         </label>
         <input
           v-model.number="form.maxPrice"
@@ -110,20 +155,7 @@ const submit = async () => {
       </div>
     </div>
 
-    <p
-      v-if="errorMessage"
-      class="text-red-600 text-sm mt-4"
-    >
-      {{ errorMessage }}
-    </p>
-    <p
-      v-if="successMessage"
-      class="text-green-600 text-sm mt-4"
-    >
-      {{ successMessage }}
-    </p>
-
-    <div class="mt-6 flex gap-3">
+    <div class="mt-6 flex gap-3 items-end justify-end">
       <button
         :disabled="loading"
         class="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
