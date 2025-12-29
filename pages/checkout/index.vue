@@ -15,6 +15,7 @@ interface OrderProduct {
     price: number;
     discountPrice?: number;
     coverId?: string;
+    vendorId: string; // 新增：用於按廠商過濾結帳商品
   };
 }
 interface Product {
@@ -23,6 +24,7 @@ interface Product {
   price: number;
   discountPrice?: number;
   coverId?: string;
+  vendorId?: string;
 }
 interface Coupon {
   id: string;
@@ -79,17 +81,15 @@ const discountAmount = computed(() => {
  * API 請求方法
  * ===================== */
 
-// 載入購物車
+// 載入購物車與過濾廠商
 const loadCartData = async () => {
   // 檢查是否為「立即購買」模式
   if (route.query.buyNow === 'true' && route.query.productId) {
     try {
-      // 呼叫單一商品資訊 API (通常你已經有這個 API 了)
       const data = await $fetch<Product>(
         `/api/product/${route.query.productId}`,
       );
 
-      // 將資料格式化為跟購物車一樣的 Array 結構
       orderProducts.value = [
         {
           id: 'buy-now-temp',
@@ -100,20 +100,34 @@ const loadCartData = async () => {
             price: data.price,
             discountPrice: data.discountPrice,
             coverId: data.coverId,
+            vendorId: data.vendorId || '',
           },
         },
       ];
-      return; // 跳過載入購物車 API
+      return;
     } catch (error) {
       if (error instanceof FetchError) toast.error('讀取商品資料失敗');
     }
   }
+
   try {
     const data = await $fetch<{ cartItems: OrderProduct[] }>('/api/cart', {
       method: 'GET',
       credentials: 'include',
     });
-    orderProducts.value = data.cartItems;
+
+    // 取得 URL 傳來的 vendorId 參數
+    const targetVendorId = route.query.vendorId as string;
+
+    // 如果有指定廠商，則進行過濾；否則帶入全部商品
+    if (targetVendorId) {
+      orderProducts.value = data.cartItems.filter(
+        (item) => item.product.vendorId === targetVendorId,
+      );
+    } else {
+      orderProducts.value = data.cartItems;
+    }
+
     if (orderProducts.value.length === 0) navigateTo('/shop');
   } catch (error) {
     if (error instanceof FetchError) toast.error('讀取購物車失敗');
@@ -167,7 +181,6 @@ const applyManualCode = async () => {
 const calculatePreviewPrice = async () => {
   if (orderProducts.value.length === 0) return;
   try {
-    // 根據 API 結構傳送 products 與 couponId
     const data = await $fetch<number>('/api/order/preview/', {
       method: 'POST',
       credentials: 'include',
@@ -179,13 +192,12 @@ const calculatePreviewPrice = async () => {
         couponId: selectedCouponId.value || undefined,
       },
     });
-    // 直接接收後端 return 的 currenPrice 數字
     previewPrice.value = data;
   } catch (error) {
     if (error instanceof FetchError) {
       if (error.statusCode === 422) {
         toast.error('此優惠券不符合使用門檻');
-        selectedCouponId.value = ''; // 自動取消選擇
+        selectedCouponId.value = '';
       }
     }
   }
@@ -227,7 +239,6 @@ const handleCreateOrder = async () => {
     if (error instanceof FetchError) {
       const status = error.statusCode;
       const message = error.data?.message;
-      // 對應後端報錯訊息
       if (status === 409) toast.error('商品庫存不足，請調整數量');
       else if (status === 422) toast.error('訂單內包含不同賣家的商品');
       else toast.error(message || '訂單建立失敗');

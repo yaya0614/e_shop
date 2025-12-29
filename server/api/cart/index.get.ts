@@ -17,6 +17,12 @@ const responseSchema = z.object({
         quantity: z.number(),
         coverId: z.string().optional(),
         status: z.enum(ProductStatus).optional(),
+        vendorId: z.string().openapi({ description: 'Vendor ID for grouping' }),
+        vendor: z
+          .object({
+            name: z.string().openapi({ description: 'Vendor Name' }),
+          })
+          .optional(),
       }),
     }),
   ),
@@ -57,7 +63,11 @@ export default defineEventHandler(async (event) => {
       userId: auth.userId,
     },
     include: {
-      product: true,
+      product: {
+        include: {
+          vendor: true,
+        },
+      },
     },
   });
 
@@ -65,7 +75,13 @@ export default defineEventHandler(async (event) => {
     cartItems: cartItems.map((cartItem) => ({
       id: cartItem.id,
       quantity: cartItem.quantity,
-      product: cartItem.product,
+      product: {
+        ...cartItem.product,
+        vendorId: cartItem.product.vendorId,
+        vendor: cartItem.product.vendor
+          ? { name: cartItem.product.vendor.name }
+          : undefined,
+      },
     })),
   };
 });
