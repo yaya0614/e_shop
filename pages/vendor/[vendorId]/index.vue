@@ -85,7 +85,7 @@ const initVendorDashboard = async () => {
     });
 
     // 驗證失敗則自動退回個人概覽頁面
-    navigateTo('/profile/overview');
+    navigateTo('/user/profile/overview');
   } finally {
     loading.value = false;
   }
