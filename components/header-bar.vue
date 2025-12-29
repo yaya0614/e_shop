@@ -75,6 +75,12 @@ async function logout() {
           登出
         </Button>
       </template>
+      <Button
+        variant="link"
+        @click="go('/order')"
+      >
+        訂單列表
+      </Button>
 
       <Button
         variant="link"
