@@ -13,11 +13,28 @@ export interface PreviewOrder {
 const props = defineProps<{
   vendorId: string;
   orders: PreviewOrder[];
-  updateOrderStatus: (
+  updateOrderStatus?: (
     orderId: string,
     status: PreviewOrder['status'],
   ) => Promise<void>;
 }>();
+
+function getStatusLabel(status: PreviewOrder['status']) {
+  switch (status) {
+    case 'FINISH':
+      return '已完成';
+    case 'CANCELED':
+      return '已取消';
+    case 'RECEIVED':
+      return '已接收';
+    case 'PROCESSING':
+      return '處理中';
+    case 'TRANSPORT':
+      return '運輸中';
+    default:
+      return status;
+  }
+}
 </script>
 
 <template>
@@ -36,10 +53,13 @@ const props = defineProps<{
         :key="order.orderId"
         :class="{
           'hover:bg-gray-50 transition grid grid-cols-8 items-center': true,
-          'bg-green-100/30': order.status === 'FINISH',
-          'bg-red-100/30': order.status === 'CANCELED',
+          'bg-green-100/30':
+            order.status === 'FINISH' && props.updateOrderStatus,
+          'bg-red-100/30':
+            order.status === 'CANCELED' && props.updateOrderStatus,
           'bg-yellow-100/30':
-            order.status === 'PROCESSING' || order.status === 'TRANSPORT',
+            (order.status === 'PROCESSING' || order.status === 'TRANSPORT') &&
+            props.updateOrderStatus,
         }"
       >
         <div class="px-6 py-4 text-green-600 font-medium col-span-3">
@@ -60,6 +80,7 @@ const props = defineProps<{
 
         <div class="px-6 py-4 col-span-1">
           <Select
+            v-if="props.updateOrderStatus"
             v-model="order.status"
             @update:model-value="
               props.updateOrderStatus(
@@ -79,6 +100,18 @@ const props = defineProps<{
               <SelectItem value="TRANSPORT">運輸中</SelectItem>
             </SelectContent>
           </Select>
+          <span
+            v-else
+            class="px-3 py-1 rounded-full text-xs font-medium"
+            :class="{
+              'bg-green-100 text-green-800': order.status === 'FINISH',
+              'bg-yellow-100 text-yellow-800':
+                order.status === 'PROCESSING' || order.status === 'TRANSPORT',
+              'bg-red-100 text-red-800': order.status === 'CANCELED',
+            }"
+          >
+            {{ getStatusLabel(order.status) }}
+          </span>
         </div>
 
         <div class="px-6 py-4 col-span-1">
