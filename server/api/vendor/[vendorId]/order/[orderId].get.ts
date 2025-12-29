@@ -61,6 +61,10 @@ const responseSchema = z
             description: 'Cover image ID of the product',
             example: '02b8ab77-4df1-4e1d-bc7b-7306f0e4e6a1',
           }),
+          quantity: z.number().openapi({
+            description: 'Quantity of the product in the order',
+            example: 2,
+          }),
         }),
       )
       .openapi({
@@ -232,6 +236,7 @@ export default defineEventHandler(async (event) => {
       description: product.product.description,
       price: product.product.discountPrice ?? product.product.price,
       coverId: product.product.coverId,
+      quantity: product.quantity,
     })),
     vendor: {
       id: order.vendorId,
@@ -243,13 +248,15 @@ export default defineEventHandler(async (event) => {
       email: order.user.email,
       address: order.user.address,
     },
-    coupon: {
-      id: order.coupon?.id,
-      code: order.coupon?.code,
-      discountPrice: order.coupon?.discountPrice,
-      couponPercentage: order.coupon?.couponPercentage,
-      maxPrice: order.coupon?.maxPrice,
-      minPrice: order.coupon?.minPrice,
-    },
+    coupon: order.coupon
+      ? {
+          id: order.coupon?.id,
+          code: order.coupon?.code,
+          discountPrice: order.coupon?.discountPrice,
+          couponPercentage: order.coupon?.couponPercentage,
+          maxPrice: order.coupon?.maxPrice,
+          minPrice: order.coupon?.minPrice,
+        }
+      : undefined,
   };
 });

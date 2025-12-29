@@ -7,41 +7,12 @@ const router = useRouter();
 const route = useRoute('vendor-vendorId-order-orderId');
 const orderId = route.params.orderId;
 
-export interface OrderDetail {
-  id: string;
-  price: number;
-  status: string;
-
-  userId: string;
-  userName: string;
-
-  couponId: string | null;
-
-  createdAt: string;
-  updatedAt: string;
-
-  vendor: {
-    id: string;
-    name: string;
-  };
-
-  products: {
-    quantity: number;
-    product: {
-      id: string;
-      name: string;
-      description: string;
-      price: number;
-      coverId: string;
-    };
-  }[];
-}
-
 const goBack = () => {
   router.back();
 };
-const { data: order, pending } = await useFetch<OrderDetail>(
-  `/api/order/${orderId}`,
+
+const { data: order, pending } = await useFetch(
+  `/api/vendor/${route.params.vendorId}/order/${orderId}`,
   {
     credentials: 'include',
   },
@@ -78,7 +49,7 @@ const { data: order, pending } = await useFetch<OrderDetail>(
         </div>
         <div>
           <span class="text-gray-500">買家名稱：</span>
-          <span>{{ order.userName }}</span>
+          <span>{{ order?.user.name }}</span>
         </div>
 
         <!-- Product List -->
@@ -99,21 +70,21 @@ const { data: order, pending } = await useFetch<OrderDetail>(
             <tbody>
               <tr
                 v-for="item in order.products"
-                :key="item.product.id"
+                :key="item.id"
                 class="border-b last:border-0"
               >
                 <td class="py-3 font-medium">
-                  {{ item.product.name }}
+                  {{ item.name }}
                 </td>
                 <td class="py-3 text-gray-500">
-                  {{ item.product.description }}
+                  {{ item.description }}
                 </td>
-                <td class="py-3 text-right">${{ item.product.price }}</td>
+                <td class="py-3 text-right">${{ item.price }}</td>
                 <td class="py-3 text-right">
                   {{ item.quantity }}
                 </td>
                 <td class="py-3 text-right font-medium">
-                  ${{ item.product.price * item.quantity }}
+                  ${{ item.price * item.quantity }}
                 </td>
               </tr>
             </tbody>
@@ -121,6 +92,12 @@ const { data: order, pending } = await useFetch<OrderDetail>(
         </div>
 
         <div class="flex justify-end">
+          <div
+            v-if="order.coupon"
+            class="underline px-6 py-4 text-lg font-semibold"
+          >
+            優惠券：{{ order.coupon.code }}
+          </div>
           <div class="underline px-6 py-4 text-lg font-semibold">
             總金額：${{ order.price }}
           </div>
