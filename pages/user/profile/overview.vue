@@ -114,15 +114,49 @@ onMounted(() => {
             <span class="text-sm text-muted-foreground">{{ item.label }}</span>
             <p class="font-medium">{{ item.value }}</p>
           </div>
-          <div class="md:col-span-2 pt-4 border-t mt-2">
+          <div class="col-span-2 pt-4 border-t mt-2">
             <NuxtLink
-              to="/profile/edit"
-              class="text-blue-600 hover:underline text-sm"
+              to="/user/profile/edit"
+              class="mt-6 block text-center py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
             >
-              編輯資料 →
+              ✏️ 編輯基本資料
             </NuxtLink>
           </div>
         </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader class="block text-sm font-medium mb-2 text-gray-700">
+        <CardTitle>付款方式 </CardTitle>
+      </CardHeader>
+      <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center space-x-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-gray-400 group-hover:text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          <span class="text-sm font-medium text-gray-600"
+            >管理已儲存的卡片</span
+          >
+        </div>
+
+        <NuxtLink
+          to="/user/payment"
+          class="text-sm text-blue-600 font-bold hover:underline"
+        >
+          前往管理 →
+        </NuxtLink>
       </CardContent>
     </Card>
 
@@ -247,48 +281,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="pt-4 border-t border-gray-100">
-            <strong class="block text-sm font-medium mb-2 text-gray-700"
-              >付款方式:</strong
-            >
-            <div
-              class="flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-gray-50 group hover:border-blue-400 transition duration-200"
-            >
-              <div class="flex items-center space-x-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 text-gray-400 group-hover:text-blue-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                  />
-                </svg>
-                <span class="text-sm font-medium text-gray-600"
-                  >管理已儲存的卡片</span
-                >
-              </div>
-
-              <NuxtLink
-                to="/user/payment"
-                class="text-sm text-blue-600 font-bold hover:underline"
-              >
-                前往管理 →
-              </NuxtLink>
-            </div>
-          </div>
-
-          <NuxtLink
-            to="/user/profile/edit"
-            class="mt-6 block text-center py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
-          >
-             ✏️ 編輯基本資料
-          </NuxtLink>
           <Button
             variant="ghost"
             size="sm"
@@ -296,7 +288,6 @@ onMounted(() => {
             class="opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
             @click="enterDashboard(v.id)"
           >
-           
             進入後台
           </Button>
         </div>
