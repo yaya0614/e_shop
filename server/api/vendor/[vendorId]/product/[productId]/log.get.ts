@@ -121,6 +121,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const logs = await prisma.productLog.findMany({
+    where: {
+      productId: productId, // 只抓取屬於該產品的日誌
+    },
     include: {
       log: {
         include: {

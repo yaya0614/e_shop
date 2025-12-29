@@ -12,6 +12,9 @@ const router = useRouter();
 
 const vendorId = route.params.vendorId;
 const productId = route.params.productId;
+const goToLog = () => {
+  router.push(`/vendor/${vendorId}/product/${productId}/log`);
+};
 
 const form = ref({
   productName: '',
@@ -174,7 +177,17 @@ const updateCategories = async () => {
 
 <template>
   <div class="flex flex-1 w-full flex-col mx-auto pt-8">
-    <h1 class="text-2xl font-semibold mb-6 px-8">更新商品資訊</h1>
+    <div class="flex items-center justify-between mb-6 px-8">
+      <h1 class="text-2xl font-semibold text-gray-800">更新商品資訊</h1>
+
+      <button
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200 shadow-sm active:scale-95"
+        @click="goToLog"
+      >
+        <span class="text-lg">📋</span>
+        查看異動紀錄
+      </button>
+    </div>
 
     <div class="flex flex-col space-y-4 overflow-y-scroll min-h-0 pb-8 px-8">
       <div
@@ -297,7 +310,6 @@ const updateCategories = async () => {
         </div>
       </div>
 
-      <!-- 商品分類管理區塊 -->
       <div class="mt-6 space-y-4 bg-white border rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-semibold">商品分類</h2>
