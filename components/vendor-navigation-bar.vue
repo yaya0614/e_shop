@@ -19,6 +19,7 @@ const mainMenu: MenuItem[] = [
   { label: 'Dashboard', path: `/vendor/${vendorId}` },
   { label: '商品', path: `/vendor/${vendorId}/product` },
   { label: '訂單', path: `/vendor/${vendorId}/order` },
+  { label: '員工管理', path: `/vendor/${vendorId}/employee` },
 ];
 
 const bottomMenu: MenuItem[] = [
