@@ -53,7 +53,12 @@ const loadCart = async (): Promise<void> => {
     });
   } catch (error: unknown) {
     if (error instanceof FetchError && error.statusCode === 401) {
-      toast.error('請先登入');
+      toast.success('您尚未登入或登入已過期，請重新登入', {
+        action: {
+          label: '前往登入',
+          onClick: () => navigateTo('/auth/login'),
+        },
+      });
     } else {
       toast.error('載入購物車失敗');
     }

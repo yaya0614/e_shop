@@ -85,9 +85,6 @@ registry.registerPath({
     400: {
       description: 'Bad request',
     },
-    401: {
-      description: 'Unauthorized',
-    },
   },
 });
 
