@@ -207,7 +207,7 @@ const handleCreateOrder = async () => {
 
   isProcessing.value = true;
   try {
-    const response = await $fetch<{ status: string }>('/api/order', {
+    const response = await $fetch<{ orderId: string }>('/api/order', {
       method: 'POST',
       credentials: 'include',
       body: {
@@ -219,9 +219,9 @@ const handleCreateOrder = async () => {
       },
     });
 
-    if (response.status === 'success') {
+    if (response.orderId) {
       toast.success('下單成功！');
-      navigateTo('/order');
+      navigateTo(`/checkout/success?orderId=${response.orderId}`);
     }
   } catch (error) {
     if (error instanceof FetchError) {

@@ -36,9 +36,9 @@ const schema = z
 
 const responseSchema = z
   .object({
-    status: z.literal('success').openapi({
-      description: 'Indicates the operation was successful',
-      example: 'success',
+    orderId: z.string().openapi({
+      description: 'Order ID',
+      example: '123e4567-e89b-12d3-a456-426614174000',
     }),
   })
   .openapi('CreateOrderResponse');
@@ -226,6 +226,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  let orderId = '';
+
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
       data: {
@@ -236,6 +238,7 @@ export default defineEventHandler(async (event) => {
         vendorId: orderVendorIds[0].vendorId,
       },
     });
+    orderId = order.id;
 
     await tx.orderProduct.createMany({
       data: payload.data.products.map((product) => {
@@ -262,8 +265,18 @@ export default defineEventHandler(async (event) => {
         }),
       );
     }
-
     await Promise.all(promises);
+
+    if (payload.data.couponId && payload.data.couponId !== '') {
+      await tx.coupon.update({
+        where: {
+          id: payload.data.couponId,
+        },
+        data: {
+          used: true,
+        },
+      });
+    }
 
     await tx.log.create({
       data: {
@@ -272,18 +285,8 @@ export default defineEventHandler(async (event) => {
       },
     });
   });
-  if (payload.data.couponId && payload.data.couponId !== '') {
-    await prisma.coupon.update({
-      where: {
-        id: payload.data.couponId,
-      },
-      data: {
-        used: true,
-      },
-    });
-  }
 
   return {
-    status: 'success',
+    orderId: orderId,
   };
 });
