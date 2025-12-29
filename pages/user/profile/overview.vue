@@ -89,9 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col h-screen px-8 py-8 mb-2 overflow-y-scroll w-screen space-y-4"
-  >
+  <div class="flex flex-col px-8 py-8 space-y-4 w-full max-w-6xl mx-auto">
     <Card>
       <CardHeader>
         <CardTitle>👤 個人檔案概覽</CardTitle>
