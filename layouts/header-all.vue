@@ -70,7 +70,7 @@ const categories = computed(() => categoriesData.value?.categories || []);
           class="w-full"
         >
           <NavigationMenuList
-            class="flex flex-row flex-nowrap overflow-x-auto gap-4 scrollbar-hide pb-2"
+            class="flex flex-row flex-nowrap gap-4 scrollbar-hide pb-2"
           >
             <NavigationMenuItem
               v-for="category in categories"

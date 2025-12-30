@@ -319,7 +319,13 @@ export default defineEventHandler(async (event) => {
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   );
-  setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
+  const encodedFilename = encodeURIComponent(filename);
+
+  setHeader(
+    event,
+    'Content-Disposition',
+    `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`,
+  );
 
   return buffer;
 });
