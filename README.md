@@ -9,6 +9,24 @@ If you have any questions, please ask in group.
 
 ## Setup
 
+### Production Environment
+
+Create a new file `.env` and copy `.docker.env.example` to it.
+
+```bash
+# npm
+cp .docker.env.example .env
+```
+
+Run Docker Compose to start the application:
+
+```bash
+# npm
+docker compose up -d
+```
+
+### Development Environment
+
 Create a new file `.env.local` and copy `.env.example` to it.
 
 ```bash
@@ -147,7 +165,6 @@ When entering a vendor dashboard, the frontend calls `GET /api/vendor/{vendorId}
 ##### Using with Error Handling
 
 ```typescript
-
 import { FetchError } from 'ofetch';
 
 const enterVendorDashboard = async (vendorId: string) => {
@@ -160,7 +177,7 @@ const enterVendorDashboard = async (vendorId: string) => {
 
     return vendorData;
   } catch (error) {
-   if (error instanceof FetchError) {
+    if (error instanceof FetchError) {
       if (error.data.statusCode === 403) {
         // TODO: Show a message to the user
         return;
@@ -182,7 +199,6 @@ const orders = await fetch('/api/vendor/orders', {
   method: 'GET',
   credentials: 'include', // Uses the enhanced token with vendor scope
 });
-
 ```
 
 #### Understanding `credentials: 'include'`

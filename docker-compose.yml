@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: e_shop_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-e_shop}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    networks:
+      - e_shop_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nuxt Application
+  app:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: e_shop_app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-e_shop}?schema=public
+
+      # Application
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+
+      # JWT Secret (IMPORTANT: Change this in production!)
+      NUXT_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+
+      # Add any other environment variables your app needs
+      # NUXT_PUBLIC_API_BASE: ${API_BASE:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - e_shop_network
+    volumes:
+      # Mount .env file if it exists (optional)
+      - ./.env:/app/.env:ro
+
+networks:
+  e_shop_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
