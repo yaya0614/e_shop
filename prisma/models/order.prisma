@@ -1,0 +1,40 @@
+enum OrderStatus {
+  RECEIVED
+  PROCESSING
+  TRANSPORT
+  FINISH
+  CANCELED
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  price     Int
+  status    OrderStatus
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  products OrderProduct[]
+
+  couponId String?
+  coupon   Coupon? @relation(fields: [couponId], references: [id])
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+}
+
+model OrderProduct {
+  id       String @id @default(uuid())
+  quantity Int
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+}

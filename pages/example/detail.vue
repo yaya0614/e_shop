@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
 const router = useRouter();
 
 const navigationTo = (id: string) => {
-  router.push({ name: "example-code", params: { code: id } });
+  router.push({ name: 'example-code', params: { code: id } });
 };
 </script>
 
@@ -25,5 +27,3 @@ const navigationTo = (id: string) => {
     <button @click="navigationTo('2')">Go to Test 2</button>
   </div>
 </template>
-
-<style scoped></style>

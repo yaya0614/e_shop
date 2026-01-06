@@ -1,7 +1,12 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { Toaster } from 'vue-sonner';
+</script>
 
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <div class="flex flex-col w-screen h-screen max-h-screen overflow-hidden">
+    <NuxtLayout>
+      <Toaster />
+      <NuxtPage />
+    </NuxtLayout>
+  </div>
 </template>

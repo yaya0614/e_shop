@@ -1,0 +1,76 @@
+<script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router';
+
+interface MenuItem {
+  label: string;
+  path?: string;
+
+  danger?: boolean;
+  onClick?: () => void;
+}
+
+const router = useRouter();
+const route = useRoute();
+const {
+  params: { vendorId },
+} = useRoute('vendor-vendorId');
+
+const mainMenu: MenuItem[] = [
+  { label: 'Dashboard', path: `/vendor/${vendorId}` },
+  { label: '商品', path: `/vendor/${vendorId}/product` },
+  { label: '訂單', path: `/vendor/${vendorId}/order` },
+  { label: '員工管理', path: `/vendor/${vendorId}/employee` },
+  { label: '操作日誌', path: `/vendor/${vendorId}/log` },
+];
+
+const bottomMenu: MenuItem[] = [
+  {
+    label: '退出管理',
+    danger: true,
+    onClick: () => {
+      router.push('/');
+    },
+  },
+];
+
+const isActive = (path?: string): boolean => {
+  if (!path) return false;
+  return route.path === path || route.path.startsWith(path + '/vendor');
+};
+</script>
+<template>
+  <aside class="w-64 h-screen bg-white border-r flex flex-col space-y-8">
+    <nav class="px-3 py-4 space-y-1">
+      <button
+        v-for="item in mainMenu"
+        :key="item.label"
+        type="button"
+        class="w-full flex items-center gap-3 px-4 py-2 rounded-md text-sm transition text-left text-gray-600 hover:bg-green-50 hover:text-green-600"
+        :class="{
+          'bg-green-100 text-green-600 font-medium': isActive(item.path),
+        }"
+        @click="router.push(item.path!)"
+      >
+        <span>{{ item.label }}</span>
+      </button>
+    </nav>
+
+    <div class="px-3 pb-4 space-y-1">
+      <button
+        v-for="item in bottomMenu"
+        :key="item.label"
+        type="button"
+        class="w-full flex items-center gap-3 px-4 py-2 rounded-md text-sm text-left transition"
+        :class="[
+          item.danger
+            ? 'text-red-500 hover:bg-red-50'
+            : 'text-gray-600 hover:bg-green-50 hover:text-green-600',
+          isActive(item.path) ? 'bg-green-100 text-green-600 font-medium' : '',
+        ]"
+        @click="item.onClick"
+      >
+        <span>{{ item.label }}</span>
+      </button>
+    </div>
+  </aside>
+</template>

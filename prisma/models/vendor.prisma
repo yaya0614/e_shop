@@ -1,0 +1,83 @@
+enum VendorStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+model Vendor {
+  id        String       @id @default(uuid())
+  name      String
+  phone     String
+  email     String       @unique
+  address   String
+  status    VendorStatus @default(PENDING)
+  isDeleted Boolean      @default(false)
+
+  products  Product[]
+  employees Employee[]
+  logs      VendorLog[]
+
+  orders Order[]
+}
+
+model SubCategory {
+  id   String @id @default(uuid())
+  name String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  products Product[]
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+
+  subCategories SubCategory[]
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Product {
+  id            String        @id @default(uuid())
+  name          String
+  description   String?
+  price         Int
+  discountPrice Int?
+  quantity      Int
+  coverId       String?
+  status        ProductStatus @default(INACTIVE)
+  isDeleted     Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  logs          ProductLog[]
+  cartProducts  CartProduct[]
+  orderProducts OrderProduct[]
+  subCategorys  SubCategory[]
+}
+
+enum EmployeeRole {
+  OWNER
+  ADMIN
+  CLERK
+}
+
+model Employee {
+  id   String       @id @default(uuid())
+  role EmployeeRole
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
